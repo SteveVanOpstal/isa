@@ -34,4 +34,8 @@ class Note extends ChangeNotifier {
     this.note = note;
     notifyListeners();
   }
+
+  Offset get center {
+    return Offset(left + (width / 2), top + (height / 2));
+  }
 }

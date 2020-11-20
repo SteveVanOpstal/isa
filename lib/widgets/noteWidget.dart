@@ -35,7 +35,7 @@ class NoteWidget extends StatelessWidget {
               ),
               Expanded(
                 child: ListTile(
-                  title: /*note.title.length > 0 ? */Text(/*note.title*/ note.left.toInt().toString() + ' ' + note.top.toInt().toString())/* : null*/,
+                  title: note.title.length > 0 ? Text(note.title) : null,
                   subtitle: Text(note.note),
                   onTap: () {
                     showDialog(

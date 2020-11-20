@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:isa/models/note.dart';
 import 'package:isa/models/section.dart';
-import 'package:isa/util/util.dart';
 import 'package:isa/widgets/noteWidget.dart';
 
 import 'dart:math' as math;
@@ -43,6 +42,7 @@ class _NotesWidgetState extends State<NotesWidget>
 
     controller.addListener(() => {
           setState(() {
+            _checkNotesOutOfBounds();
             _animate(widget.section);
           })
         });
@@ -89,17 +89,13 @@ class _NotesWidgetState extends State<NotesWidget>
 
     for (var i = 0; i < section.notes.length; i++) {
       var note = section.notes[i];
-      var noteOffset = Util.centerPoint(note);
 
       for (var j = 0; j < section.notes.length; j++) {
         if (i == j) {
           continue;
         }
 
-        var n = section.notes[j];
-        var nOffset = Util.centerPoint(n);
-
-        var vector = (noteOffset - nOffset);
+        var vector = (note.center - section.notes[j].center);
         var distance = vector.distance;
         var direction = vector.direction;
 
@@ -133,7 +129,7 @@ class _NotesWidgetState extends State<NotesWidget>
     var changes = false;
     var random = math.Random();
 
-    var center = Util.centerPoint(note);
+    var center = note.center;
 
     if (note.left < offset.dx && center.dx > offset.dx) {
       note.left += ((offset.dx - note.left) * 0.05) + random.nextInt(5);
@@ -201,11 +197,19 @@ class _NotesWidgetState extends State<NotesWidget>
   }
 
   bool _outOfBounds(Section section, Note note) {
-    var center = Util.centerPoint(note);
+    var center = note.center;
     return _outOfBoundsTop(center.dx) ||
         _outOfBoundsLeft(center.dy) ||
         _outOfBoundsRight(section, center.dx) ||
         _outOfBoundsBottom(section, center.dy);
+  }
+
+  void _checkNotesOutOfBounds() {
+    for (var note in widget.section.notes) {
+      if (_outOfBounds(widget.section, note)) {
+        widget.onMove(note);
+      }
+    }
   }
 
   createNoteWidgets(Section section) {
@@ -219,12 +223,9 @@ class _NotesWidgetState extends State<NotesWidget>
               _pan(section, note, offset);
             });
           }, onPanEnd: () {
-            if (_outOfBounds(section, note)) {
-              widget.onMove(note);
-            } else {
-              controller.reset();
-              controller.forward();
-            }
+            _checkNotesOutOfBounds();
+            controller.reset();
+            controller.forward();
           }),
         ),
       );

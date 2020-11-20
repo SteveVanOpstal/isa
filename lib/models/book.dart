@@ -4,11 +4,17 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:isa/models/section.dart';
 
+const CHAPTER_WIDTH = 800.0;
+const CHAPTER_HEIGHT = 800.0;
+
 class Book extends ChangeNotifier {
-  final main = Section(-1, width: 1500, height: 500, title: '');
-  final List<Section> _chapters = [
-    Section(0, width: 500, height: 500, title: '', scale: 0.5)
-  ];
+  final main = Section(-1, width: 2000, height: 800, title: '');
+  final List<Section> _chapters = [];
+  double chapterScale = 0.5;
+
+  Book() {
+    addChapter();
+  }
 
   UnmodifiableListView<Section> get chapters {
     _chapters.sort((c1, c2) => c1.index.compareTo(c2.index));
@@ -20,8 +26,12 @@ class Book extends ChangeNotifier {
   }
 
   void addChapter() {
-    var index = (chapters.last.index ?? 0) + 1;
-    _chapters.add(Section(index, width: 500, height: 500, title: '', scale: 0.5));
+    var index = chapters.isEmpty ? 0 : (chapters.last.index ?? 0) + 1;
+    _chapters.add(Section(index,
+        width: CHAPTER_WIDTH,
+        height: CHAPTER_HEIGHT,
+        title: '',
+        scale: this.chapterScale));
     notifyListeners();
   }
 

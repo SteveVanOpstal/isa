@@ -26,8 +26,6 @@ class NoteDialogWidget extends StatelessWidget {
                   },
                 ),
                 TextFormField(
-                  // expands: true,
-                  // maxLines: null,
                   initialValue: note.note,
                   decoration: InputDecoration(labelText: 'note'),
                   onFieldSubmitted: (value) {

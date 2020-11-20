@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:isa/util/util.dart';
 import 'package:isa/widgets/sectionWidget.dart';
 import 'package:isa/widgets/notesWidget.dart';
 import 'package:provider/provider.dart';
@@ -35,9 +34,7 @@ class _BookScreenState extends State<BookScreen> {
   }
 
   _move(Section source, Note note) {
-    var match = _containedBySection(source, _book.main, note);
-
-    if (match) {
+    if (_containedBySection(source, _book.main, note)) {
       _moveNote(source, _book.main, note);
       return;
     }
@@ -55,8 +52,7 @@ class _BookScreenState extends State<BookScreen> {
   Section _containedByChapter(Section source, Note note) {
     for (var i = 0; i < _book.chapters.length; i++) {
       var chapter = _book.chapters[i];
-      var match = _containedBySection(source, chapter, note);
-      if (match) {
+      if (_containedBySection(source, chapter, note)) {
         return chapter;
       }
     }
@@ -68,15 +64,20 @@ class _BookScreenState extends State<BookScreen> {
     var sourceOffset = _sectionOrigin(source);
     var targetOffset = _sectionOrigin(target);
 
-    var x = sourceOffset.dx + (note.left + (note.width / 2) * source.scale);
-    var y = sourceOffset.dy + (note.top + (note.height / 2) * source.scale);
+    var noteCenter = note.center;
+    noteCenter *= source.scale;
+
+    sourceOffset += noteCenter;
 
     var top = targetOffset.dy;
     var bottom = top + (target.height * target.scale);
     var left = targetOffset.dx;
     var right = left + (target.width * target.scale);
 
-    return x > left && x < right && y > top && y < bottom;
+    return sourceOffset.dx > left &&
+        sourceOffset.dx < right &&
+        sourceOffset.dy > top &&
+        sourceOffset.dy < bottom;
   }
 
   Offset _sectionOrigin(Section section) {
@@ -106,29 +107,13 @@ class _BookScreenState extends State<BookScreen> {
     var sourceOrigin = _sectionOrigin(source);
     var targetOrigin = _sectionOrigin(target);
 
-    var noteCenter = Util.centerPoint(note);
+    var noteCenter = note.center;
 
     noteCenter *= source.scale;
 
     noteCenter += sourceOrigin - targetOrigin;
 
     noteCenter /= target.scale;
-
-    // note.title = noteCenter.dx.toInt().toString() +
-    //     ' ' +
-    //     noteCenter.dy.toInt().toString();
-    // note.note = 'source: ' +
-    //     sourceOrigin.dx.toInt().toString() +
-    //     ' ' +
-    //     sourceOrigin.dy.toInt().toString() +
-    //     '\ntarget: ' +
-    //     targetOrigin.dx.toInt().toString() +
-    //     ' ' +
-    //     targetOrigin.dy.toInt().toString() +
-    //     '\nnote? : ' +
-    //     note.left.toInt().toString() +
-    //     ' ' +
-    //     note.top.toInt().toString();
 
     note.left = noteCenter.dx - (note.width / 2);
     note.top = noteCenter.dy - (note.height / 2);
