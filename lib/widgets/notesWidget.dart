@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:isa/models/note.dart';
 import 'package:isa/models/section.dart';
-import 'package:isa/widgets/noteWidget.dart';
+import 'package:isa/widgets/note/noteWidget.dart';
 
 import 'dart:math' as math;
 
@@ -214,19 +214,26 @@ class _NotesWidgetState extends State<NotesWidget>
 
   createNoteWidgets(Section section) {
     List<Widget> notes = [];
+
+    var hslColor = HSLColor.fromColor(section.color);
+    hslColor =
+        hslColor.withLightness((hslColor.lightness + 0.2).clamp(0.0, 1.0));
     for (var note in section.notes) {
       notes.add(
         ChangeNotifierProvider.value(
           value: note,
-          child: NoteWidget(onPan: (offset) {
-            setState(() {
-              _pan(section, note, offset);
-            });
-          }, onPanEnd: () {
-            _checkNotesOutOfBounds();
-            controller.reset();
-            controller.forward();
-          }),
+          child: NoteWidget(
+              color: hslColor.toColor(),
+              onPan: (offset) {
+                setState(() {
+                  _pan(section, note, offset);
+                });
+              },
+              onPanEnd: () {
+                _checkNotesOutOfBounds();
+                controller.reset();
+                controller.forward();
+              }),
         ),
       );
     }

@@ -37,6 +37,7 @@ class _SectionHeadingWidgetState extends State<SectionHeadingWidget> {
             alignment: Alignment.topRight,
             padding: EdgeInsets.all(10.0),
             child: IconButton(
+              color: Colors.white,
               alignment: Alignment.center,
               icon: Icon(Icons.add),
               onPressed: () {

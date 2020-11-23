@@ -2,6 +2,7 @@ import 'dart:collection';
 
 import 'package:flutter/widgets.dart';
 import 'package:isa/models/note.dart';
+import 'package:random_color/random_color.dart';
 
 class Section extends ChangeNotifier {
   int index;
@@ -9,6 +10,7 @@ class Section extends ChangeNotifier {
   double height;
   double scale = 1;
   String title = '';
+  Color color;
 
   Section(
     this.index, {
@@ -16,13 +18,19 @@ class Section extends ChangeNotifier {
     this.height,
     this.scale = 1,
     this.title,
-  });
+    this.color,
+  }) {
+    RandomColor _randomColor = RandomColor();
+    this.color = _randomColor.randomColor(
+        colorSaturation: ColorSaturation.lowSaturation,
+        colorBrightness: ColorBrightness.light);
+  }
 
   final List<Note> _notes = [];
 
   UnmodifiableListView<Note> get notes => UnmodifiableListView(_notes);
 
-  void add({Note note}) {
+  void addNote({Note note}) {
     if (note is Note) {
       _notes.add(note);
     } else {

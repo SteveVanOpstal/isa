@@ -1,5 +1,7 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:isa/widgets/sectionWidget.dart';
+import 'package:isa/widgets/section/sectionBackgroundWidget.dart';
+import 'package:isa/widgets/section/sectionWidget.dart';
 import 'package:isa/widgets/notesWidget.dart';
 import 'package:provider/provider.dart';
 
@@ -27,6 +29,19 @@ class _BookScreenState extends State<BookScreen> {
               _move(source, note);
             },
           ),
+        ),
+      );
+    }
+    return chapters;
+  }
+
+  createChapterBackgrounds() {
+    var chapters = [];
+    for (var chapter in _book.chapters) {
+      chapters.add(
+        ChangeNotifierProvider.value(
+          value: chapter,
+          child: SectionBackgroundWidget(chapter),
         ),
       );
     }
@@ -118,7 +133,7 @@ class _BookScreenState extends State<BookScreen> {
     note.left = noteCenter.dx - (note.width / 2);
     note.top = noteCenter.dy - (note.height / 2);
 
-    target.add(note: note);
+    target.addNote(note: note);
   }
 
   @override
@@ -126,8 +141,22 @@ class _BookScreenState extends State<BookScreen> {
     return ChangeNotifierProvider.value(
       value: _book,
       child: Scaffold(
-        body: Column(
-          children: [
+        body: Stack(children: [
+          Column(children: [
+            ChangeNotifierProvider.value(
+              value: _book.main,
+              child: SectionBackgroundWidget(
+                _book.main,
+                minWidth: MediaQuery.of(context).size.width,
+              ),
+            ),
+            Consumer<Book>(builder: (context, book, child) {
+              return Row(children: [
+                ...createChapterBackgrounds(),
+              ]);
+            })
+          ]),
+          Column(children: [
             ChangeNotifierProvider.value(
               value: _book.main,
               child: SectionWidget(
@@ -135,6 +164,7 @@ class _BookScreenState extends State<BookScreen> {
                 onMove: (source, note) {
                   _move(source, note);
                 },
+                minWidth: MediaQuery.of(context).size.width,
               ),
             ),
             Consumer<Book>(
@@ -153,8 +183,8 @@ class _BookScreenState extends State<BookScreen> {
                 ]);
               },
             ),
-          ],
-        ),
+          ]),
+        ]),
       ),
     );
   }

@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:isa/models/note.dart';
-import 'package:isa/widgets/noteDialogWidget.dart';
+import 'package:isa/widgets/note/noteDialogWidget.dart';
 import 'package:provider/provider.dart';
 
 class NoteWidget extends StatelessWidget {
   final Function(Offset) onPan;
   final VoidCallback onPanEnd;
+  final Color color;
 
-  NoteWidget({this.onPan, this.onPanEnd});
+  NoteWidget({this.onPan, this.onPanEnd, this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -29,22 +30,25 @@ class NoteWidget extends StatelessWidget {
                   onPanEnd();
                 },
                 child: Container(
-                  color: Colors.grey,
+                  color: Colors.grey[400],
                   child: Icon(Icons.drag_indicator),
                 ),
               ),
               Expanded(
-                child: ListTile(
-                  title: note.title.length > 0 ? Text(note.title) : null,
-                  subtitle: Text(note.note),
-                  onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) {
-                        return NoteDialogWidget(note: note);
-                      },
-                    );
-                  },
+                child: Container(
+                  color: color,
+                  child: ListTile(
+                    title: note.title.length > 0 ? Text(note.title) : null,
+                    subtitle: Text(note.note),
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) {
+                          return NoteDialogWidget(note: note);
+                        },
+                      );
+                    },
+                  ),
                 ),
               ),
             ],
