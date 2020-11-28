@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:isa/models/section.dart';
-import 'package:isa/widgets/color/colorDialogWidget.dart';
+import 'package:isa/widgets/color/colorLensMenuButton.dart';
 
 class SectionHeadingWidget extends StatefulWidget {
   final Section section;
@@ -43,18 +43,7 @@ class _SectionHeadingWidgetState extends State<SectionHeadingWidget> {
                     });
                   },
                 ),
-                IconButton(
-                  color: Colors.white,
-                  alignment: Alignment.center,
-                  icon: Icon(Icons.color_lens),
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      barrierColor: Colors.white.withOpacity(0),
-                      child: ColorDialogWidget(section: widget.section),
-                    );
-                  },
-                ),
+                ColorLensMenuButton(section: widget.section),
               ],
             ),
           ),
