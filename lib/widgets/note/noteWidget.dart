@@ -12,6 +12,10 @@ class NoteWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    var hslColor = HSLColor.fromColor(color);
+    hslColor =
+        hslColor.withLightness((hslColor.lightness + 0.1).clamp(0.0, 1.0));
+
     return Consumer<Note>(builder: (context, note, child) {
       return Positioned(
         left: note.left,
@@ -19,6 +23,9 @@ class NoteWidget extends StatelessWidget {
         width: note.width,
         height: note.height,
         child: Card(
+          clipBehavior: Clip.antiAlias,
+          color: hslColor.toColor(),
+          elevation: 5.0,
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -30,25 +37,20 @@ class NoteWidget extends StatelessWidget {
                   onPanEnd();
                 },
                 child: Container(
-                  color: Colors.grey[400],
+                  color: Colors.grey[100],
                   child: Icon(Icons.drag_indicator),
                 ),
               ),
               Expanded(
-                child: Container(
-                  color: color,
-                  child: ListTile(
-                    title: note.title.length > 0 ? Text(note.title) : null,
-                    subtitle: Text(note.note),
-                    onTap: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) {
-                          return NoteDialogWidget(note: note);
-                        },
-                      );
-                    },
-                  ),
+                child: ListTile(
+                  title: note.title.length > 0 ? Text(note.title) : null,
+                  subtitle: Text(note.note),
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      child: NoteDialogWidget(note: note),
+                    );
+                  },
                 ),
               ),
             ],

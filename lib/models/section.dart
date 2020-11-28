@@ -5,7 +5,7 @@ import 'package:isa/models/note.dart';
 import 'package:random_color/random_color.dart';
 
 class Section extends ChangeNotifier {
-  int index;
+  int id;
   double width;
   double height;
   double scale = 1;
@@ -13,7 +13,7 @@ class Section extends ChangeNotifier {
   Color color;
 
   Section(
-    this.index, {
+    this.id, {
     this.width,
     this.height,
     this.scale = 1,
@@ -48,6 +48,16 @@ class Section extends ChangeNotifier {
 
   void remove(Note note) {
     _notes.remove(note);
+    notifyListeners();
+  }
+
+  void setScale(double scale) {
+    this.scale = scale;
+    notifyListeners();
+  }
+
+  void setColor(Color color) {
+    this.color = color;
     notifyListeners();
   }
 }

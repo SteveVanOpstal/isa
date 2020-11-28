@@ -1,26 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:isa/models/section.dart';
+import 'package:isa/widgets/color/colorDialogWidget.dart';
 
 class SectionHeadingWidget extends StatefulWidget {
+  final Section section;
   final double width;
   final double height;
-  final String title;
-  final VoidCallback onAdd;
 
   const SectionHeadingWidget(
-      {@required this.width,
-      @required this.height,
-      @required this.title,
-      this.onAdd});
+      {@required this.section, @required this.width, @required this.height});
 
   @override
   _SectionHeadingWidgetState createState() => _SectionHeadingWidgetState();
 }
 
 class _SectionHeadingWidgetState extends State<SectionHeadingWidget> {
-  add() {
-    widget.onAdd();
-  }
-
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -31,18 +25,37 @@ class _SectionHeadingWidgetState extends State<SectionHeadingWidget> {
           Container(
             alignment: Alignment.topCenter,
             padding: EdgeInsets.all(10.0),
-            child: Text(widget.title),
+            child: Text(widget.section.title),
           ),
           Container(
             alignment: Alignment.topRight,
             padding: EdgeInsets.all(10.0),
-            child: IconButton(
-              color: Colors.white,
-              alignment: Alignment.center,
-              icon: Icon(Icons.add),
-              onPressed: () {
-                add();
-              },
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                IconButton(
+                  color: Colors.white,
+                  alignment: Alignment.center,
+                  icon: Icon(Icons.add),
+                  onPressed: () {
+                    setState(() {
+                      widget.section.addNote();
+                    });
+                  },
+                ),
+                IconButton(
+                  color: Colors.white,
+                  alignment: Alignment.center,
+                  icon: Icon(Icons.color_lens),
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      barrierColor: Colors.white.withOpacity(0),
+                      child: ColorDialogWidget(section: widget.section),
+                    );
+                  },
+                ),
+              ],
             ),
           ),
         ],

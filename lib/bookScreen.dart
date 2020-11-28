@@ -16,6 +16,7 @@ class BookScreen extends StatefulWidget {
 
 class _BookScreenState extends State<BookScreen> {
   final Book _book = Book();
+  double offset = 0;
 
   createChapters() {
     var chapters = [];
@@ -96,14 +97,14 @@ class _BookScreenState extends State<BookScreen> {
   }
 
   Offset _sectionOrigin(Section section) {
-    if (section.index < 0) {
+    if (section.id < 0) {
       // main
       return Offset.zero;
     }
 
     double x = 0;
     for (var chapter in _book.chapters) {
-      if (chapter.index < section.index) {
+      if (chapter.id < section.id) {
         x += chapter.width * chapter.scale;
       }
     }
@@ -136,55 +137,74 @@ class _BookScreenState extends State<BookScreen> {
     target.addNote(note: note);
   }
 
+  scroll(double delta) {
+    offset += delta;
+    var d = offset / 1000;
+
+    _book.main.setScale(1 - d);
+    _book.setChaptersScale((d / 1.5) + 0.3);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider.value(
-      value: _book,
-      child: Scaffold(
-        body: Stack(children: [
-          Column(children: [
-            ChangeNotifierProvider.value(
-              value: _book.main,
-              child: SectionBackgroundWidget(
-                _book.main,
-                minWidth: MediaQuery.of(context).size.width,
-              ),
-            ),
-            Consumer<Book>(builder: (context, book, child) {
-              return Row(children: [
-                ...createChapterBackgrounds(),
-              ]);
-            })
-          ]),
-          Column(children: [
-            ChangeNotifierProvider.value(
-              value: _book.main,
-              child: SectionWidget(
-                bounds: Bounds(bottom: false),
-                onMove: (source, note) {
-                  _move(source, note);
-                },
-                minWidth: MediaQuery.of(context).size.width,
-              ),
-            ),
-            Consumer<Book>(
-              builder: (context, book, child) {
-                return Row(children: [
-                  ...createChapters(),
-                  Expanded(
-                    child: IconButton(
-                      alignment: Alignment.center,
-                      icon: Icon(Icons.add),
-                      onPressed: () {
-                        _book.addChapter();
+    return Listener(
+      onPointerSignal: (signal) {
+        if (signal is PointerScrollEvent) {
+          scroll(signal.scrollDelta.dy);
+        }
+      },
+      child: ChangeNotifierProvider.value(
+        value: _book,
+        child: Scaffold(
+          body: Stack(
+            children: [
+              Column(children: [
+                ChangeNotifierProvider.value(
+                  value: _book.main,
+                  child: SectionBackgroundWidget(
+                    _book.main,
+                    minWidth: MediaQuery.of(context).size.width,
+                  ),
+                ),
+                Consumer<Book>(builder: (context, book, child) {
+                  return Row(children: [
+                    ...createChapterBackgrounds(),
+                  ]);
+                })
+              ]),
+              Column(
+                children: [
+                  ChangeNotifierProvider.value(
+                    value: _book.main,
+                    child: SectionWidget(
+                      bounds: Bounds(bottom: false),
+                      onMove: (source, note) {
+                        _move(source, note);
                       },
+                      minWidth: MediaQuery.of(context).size.width,
                     ),
-                  )
-                ]);
-              },
-            ),
-          ]),
-        ]),
+                  ),
+                  Consumer<Book>(
+                    builder: (context, book, child) {
+                      return Row(children: [
+                        ...createChapters(),
+                        Expanded(
+                          child: IconButton(
+                            alignment: Alignment.center,
+                            icon: Icon(Icons.add),
+                            onPressed: () {
+                              _book.addChapter();
+                            },
+                          ),
+                        )
+                      ]);
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

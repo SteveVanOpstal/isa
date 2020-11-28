@@ -22,11 +22,13 @@ class SectionBackgroundWidget extends StatelessWidget {
     return Consumer<Section>(
       builder: (context, section, child) {
         return Container(
-          color: section.color,
           margin: EdgeInsets.fromLTRB(5.0, 5.0, 2.5, 2.5),
-          child: SizedBox(
-            width: _width(section) - 7.5,
-            height: _height(section) - 7.5,
+          child: Ink(
+            color: section.color,
+            child: SizedBox(
+              width: _width(section) - 7.5,
+              height: _height(section) - 7.5,
+            ),
           ),
         );
       },

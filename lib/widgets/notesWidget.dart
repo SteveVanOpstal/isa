@@ -36,6 +36,8 @@ class NotesWidget extends StatefulWidget {
 class _NotesWidgetState extends State<NotesWidget>
     with SingleTickerProviderStateMixin {
   AnimationController controller;
+
+  @override
   void initState() {
     controller =
         AnimationController(vsync: this, duration: Duration(seconds: 2));
@@ -214,16 +216,12 @@ class _NotesWidgetState extends State<NotesWidget>
 
   createNoteWidgets(Section section) {
     List<Widget> notes = [];
-
-    var hslColor = HSLColor.fromColor(section.color);
-    hslColor =
-        hslColor.withLightness((hslColor.lightness + 0.2).clamp(0.0, 1.0));
     for (var note in section.notes) {
       notes.add(
         ChangeNotifierProvider.value(
           value: note,
           child: NoteWidget(
-              color: hslColor.toColor(),
+              color: section.color,
               onPan: (offset) {
                 setState(() {
                   _pan(section, note, offset);

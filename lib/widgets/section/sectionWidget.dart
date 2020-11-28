@@ -54,14 +54,9 @@ class _SectionWidgetState extends State<SectionWidget> {
               ),
             ),
             SectionHeadingWidget(
+              section: section,
               width: _width(section),
               height: _height(section),
-              title: section.title,
-              onAdd: () {
-                setState(() {
-                  section.addNote();
-                });
-              },
             ),
           ],
         );
