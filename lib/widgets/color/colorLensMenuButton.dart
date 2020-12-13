@@ -14,7 +14,7 @@ class _ColorDialogWidget extends StatelessWidget {
     for (var i = 0; i < count; i++) {
       colorWidgets.add(ColorButtonWidget(
         onPressed: (color) {
-          section.setColor(color);
+          // section.setColor(color);
           Navigator.pop(context);
         },
       ));

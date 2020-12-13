@@ -138,11 +138,11 @@ class _BookScreenState extends State<BookScreen> {
   }
 
   scroll(double delta) {
-    offset += delta;
-    var d = offset / 1000;
+    // offset += delta;
+    // var d = offset / 1000;
 
-    _book.main.setScale(1 - d);
-    _book.setChaptersScale((d / 1.5) + 0.3);
+    // _book.main.setScale(1 - d);
+    // _book.setChaptersScale((d / 1.5) + 0.3);
   }
 
   @override
