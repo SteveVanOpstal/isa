@@ -1,22 +1,15 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:isa/database/daos/booksDao.dart';
 import 'package:isa/database/database.dart';
 import 'package:isa/models/book.dart';
-
-class BookFile {
-  final String name;
-
-  BookFile(this.name);
-}
 
 // States
 abstract class BooksState {}
 
 class BooksLoadingState extends BooksState {}
 
-class BooksEmptyState extends BooksState {}
-
 class BooksReadyState extends BooksState {
-  final List<BookFile> list;
+  final List<Book> list;
 
   BooksReadyState(this.list);
 }
@@ -27,16 +20,16 @@ abstract class BooksEvent {}
 class InitBooksEvent extends BooksEvent {}
 
 class AddBookEvent extends BooksEvent {
-  final String name;
+  final String title;
 
-  AddBookEvent(this.name);
+  AddBookEvent(this.title);
 }
 
 class GetBooksEvent extends BooksEvent {}
 
 // Bloc
 class BooksBloc extends Bloc<BooksEvent, BooksState> {
-  var db = IsaDatabase();
+  var dao = BooksDao();
 
   BooksBloc() : super(BooksLoadingState()) {
     add(InitBooksEvent());
@@ -50,18 +43,15 @@ class BooksBloc extends Bloc<BooksEvent, BooksState> {
         add(GetBooksEvent());
         break;
       case AddBookEvent:
-        await db.createBookDatabase((event as AddBookEvent).name);
+        final title = (event as AddBookEvent).title;
+        final book = Book(0, title, 0);
+        await dao.addBook(book);
         yield BooksLoadingState();
         add(GetBooksEvent());
         break;
       case GetBooksEvent:
-        final books = await db.getBooks();
-
-        if (books.isEmpty) {
-          yield BooksEmptyState();
-        } else {
-          yield BooksReadyState(books);
-        }
+        final books = await dao.getBooks();
+        yield BooksReadyState(books);
         break;
     }
   }

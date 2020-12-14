@@ -8,9 +8,9 @@ class IsaDatabase {
   String _dbPath = 'isa.db';
   DatabaseFactory _dbFactory = databaseFactoryIo;
   Database _database;
-  Map<String, Database> _books;
+  Map<String, Database> _books = {};
 
-  final _bookFilesStore = intMapStoreFactory.store('bookFiles');
+  final _bookFilesStore = StoreRef<int, String>('bookFiles');
   final _bookStore = StoreRef('book');
 
   factory IsaDatabase() {
@@ -31,9 +31,11 @@ class IsaDatabase {
 
     final records = await _bookFilesStore.find(db);
 
-    final files = records.map((r) => r['file']);
+    if (records.isEmpty) {
+      return [];
+    }
 
-    return files;
+    return records.map((r) => r.value).toList();
   }
 
   Future<Database> createBookDatabase(String title) async {
@@ -42,12 +44,12 @@ class IsaDatabase {
 
     final bookFiles = await _getBookFiles();
     int counter = 0;
-    while (bookFiles.contains((f) => f == file)) {
+    while (bookFiles.contains(file)) {
       file = title + counter.toString() + '.isa';
       counter++;
     }
 
-    await _bookFilesStore.add(db, {'file': file});
+    await _bookFilesStore.add(db, file);
 
     return _dbFactory.openDatabase(file);
   }

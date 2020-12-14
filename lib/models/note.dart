@@ -38,6 +38,10 @@ class Note extends ChangeNotifier {
     this.note = note;
   }
 
+  Offset get center {
+    return Offset(left + (width / 2), top + (height / 2));
+  }
+
   Map<String, dynamic> toMap() {
     return {
       "id": id,
@@ -55,9 +59,5 @@ class Note extends ChangeNotifier {
   static Note fromMap(Map<String, dynamic> map) {
     return Note(map["id"], map["bookId"], map["sectionId"], map["left"],
         map["top"], map["width"], map["height"], map["title"], map["note"]);
-  }
-
-  Offset get center {
-    return Offset(left + (width / 2), top + (height / 2));
   }
 }

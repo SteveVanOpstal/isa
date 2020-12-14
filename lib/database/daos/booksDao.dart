@@ -22,7 +22,7 @@ class BooksDao {
 
     final books = bookDbs.map((bookDb) async {
       final record = await _bookStore.record('book').get(bookDb);
-      return Book.fromMap(record.value);
+      return Book.fromMap(record);
     });
 
     return Future.wait(books);

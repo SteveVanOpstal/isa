@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-import 'bookScreen.dart';
-import 'database/database.dart';
+import 'package:isa/bloc/booksBloc.dart';
+import 'package:isa/models/book.dart';
 
 void main() {
   runApp(MyApp());
@@ -40,41 +39,65 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  _buildBooks(List<Book> books) {
+    return books.map(
+      (b) => FlatButton(
+        child: Text(b.title),
+        onPressed: () {
+          // Navigator.push(
+          //     context,
+          //     PageRouteBuilder(
+          //       opaque: false,
+          //       pageBuilder: (BuildContext context, _, __) {
+          //         return BookScreen();
+          //       },
+          //     ));
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<>( 
-    builder:
-     Scaffold(
-      appBar: AppBar(
-        title: Center(child: Text(widget.title)),
-      ),
-      body: SafeArea(
-        child: Center(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Text(
-                'Working Title',
+    return BlocProvider(
+      create: (_) => BooksBloc(),
+      child: BlocBuilder<BooksBloc, BooksState>(builder: (context, state) {
+        switch (state.runtimeType) {
+          case BooksLoadingState:
+            return Center(
+                child: Container(
+                    height: 20.0,
+                    width: 20.0,
+                    child: CircularProgressIndicator()));
+            break;
+          default:
+            final list = (state as BooksReadyState).list ?? [];
+            return Scaffold(
+              appBar: AppBar(
+                title: Center(child: Text(widget.title)),
               ),
-              FloatingActionButton(
-                child: Icon(Icons.add),
-                onPressed: () {
-                  _database.createBook('Working Title');
-                  // Navigator.push(
-                  //     context,
-                  //     PageRouteBuilder(
-                  //       opaque: false,
-                  //       pageBuilder: (BuildContext context, _, __) {
-                  //         return BookScreen();
-                  //       },
-                  //     ));
-                },
+              body: SafeArea(
+                child: Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      ..._buildBooks(list),
+                      FloatingActionButton(
+                        child: Icon(Icons.add),
+                        onPressed: () {
+                          context
+                              .read<BooksBloc>()
+                              .add(AddBookEvent('Working Title'));
+                        },
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ],
-          ),
-        ),
-      ),
-    ),
+            );
+            break;
+        }
+      }),
     );
   }
 }
