@@ -1,5 +1,4 @@
 import 'package:isa/database/database.dart';
-import 'package:isa/models/book.dart';
 import 'package:isa/models/section.dart';
 import 'package:sembast/sembast.dart';
 
@@ -19,7 +18,24 @@ class SectionsDao {
     final bookDb = await _database.getBookDatabase(bookId);
 
     final records = await _sectionStore.find(bookDb);
-    return records.map((r) => Section.fromMap(r.value));
+    if (records.isEmpty) {
+      return [];
+    }
+    return records.map((r) => Section.fromMap(r.value)).toList();
+  }
+
+  Future<int> newSection(int bookId, int sectionId) async {
+    final bookDb = await _database.getBookDatabase(bookId);
+    // final sections = await getSections(section.bookId);
+    // final sectionIds = sections.map((s) => s.id);
+
+    // var newId = 0;
+    // while (sectionIds.contains(newId)) {
+    //   newId++;
+    // }
+    final section = Section(id: sectionId, bookId: bookId, title: 'test');
+
+    return await _sectionStore.add(bookDb, section.toMap());
   }
 
   Future<int> addSection(Section section) async {

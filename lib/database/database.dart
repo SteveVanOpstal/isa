@@ -57,7 +57,7 @@ class IsaDatabase {
   Future<Database> getBookDatabase(int id) async {
     for (var bookDb in await getBookDatabases()) {
       final record = await _bookStore.record('book').get(bookDb);
-      final book = Book.fromMap(record.value);
+      final book = Book.fromMap(record);
       if (book.id == id) {
         return bookDb;
       }

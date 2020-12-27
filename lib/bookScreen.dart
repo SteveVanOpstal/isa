@@ -1,84 +1,84 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:isa/bloc/notesBloc.dart';
+import 'package:isa/bloc/sectionsBloc.dart';
+import 'package:isa/widgets/notesWidget.dart';
 import 'package:isa/widgets/section/sectionBackgroundWidget.dart';
 import 'package:isa/widgets/section/sectionWidget.dart';
-import 'package:isa/widgets/notesWidget.dart';
 import 'package:provider/provider.dart';
 
-import 'models/book.dart';
+import 'bloc/sectionBloc.dart';
 import 'models/note.dart';
 import 'models/section.dart';
 
 class BookScreen extends StatefulWidget {
+  final int bookId;
+
+  const BookScreen(this.bookId);
+
   @override
   _BookScreenState createState() => _BookScreenState();
 }
 
 class _BookScreenState extends State<BookScreen> {
-  final Book _book = Book();
   double offset = 0;
 
-  createChapters() {
-    var chapters = [];
-    for (var chapter in _book.chapters) {
-      chapters.add(
-        ChangeNotifierProvider.value(
-          value: chapter,
-          child: SectionWidget(
-            bounds: Bounds(top: false, left: false, right: false),
-            onMove: (source, note) {
-              _move(source, note);
-            },
-          ),
+  List<Widget> createChapters(BuildContext context, List<Section> sections) {
+    List<Widget> list = [];
+    for (var section in sections) {
+      if (section.id < 0) {
+        continue;
+      }
+      list.add(
+        SectionWidget(
+          section: section,
+          bounds: Bounds(top: false, left: false, right: false),
+          onMove: (source, note) {
+            _move(context, sections, source, note);
+          },
         ),
       );
     }
-    return chapters;
+    return list;
   }
 
-  createChapterBackgrounds() {
-    var chapters = [];
-    for (var chapter in _book.chapters) {
-      chapters.add(
-        ChangeNotifierProvider.value(
-          value: chapter,
-          child: SectionBackgroundWidget(chapter),
-        ),
-      );
-    }
-    return chapters;
+  List<Widget> createSectionBackgrounds(List<Section> sections) {
+    return sections
+        .map((section) => BlocProvider(
+              create: (_) => SectionBloc(section),
+              child: SectionBackgroundWidget(section),
+            ))
+        .toList();
   }
 
-  _move(Section source, Note note) {
-    if (_containedBySection(source, _book.main, note)) {
-      _moveNote(source, _book.main, note);
-      return;
-    }
-
-    var matchedSection = _containedByChapter(source, note);
+  _move(
+      BuildContext context, List<Section> sections, Section source, Note note) {
+    var matchedSection = _containedByChapter(sections, source, note);
 
     if (matchedSection is Section) {
-      _moveNote(source, matchedSection, note);
+      _moveNote(context, sections, source, matchedSection, note);
       return;
     }
 
-    _centerNote(source, note);
+    context.read<NotesBloc>().add(CenterNoteEvent(note));
   }
 
-  Section _containedByChapter(Section source, Note note) {
-    for (var i = 0; i < _book.chapters.length; i++) {
-      var chapter = _book.chapters[i];
-      if (_containedBySection(source, chapter, note)) {
-        return chapter;
+  Section _containedByChapter(
+      List<Section> sections, Section source, Note note) {
+    for (var section in sections) {
+      if (_containedBySection(sections, source, section, note)) {
+        return section;
       }
     }
 
     return null;
   }
 
-  bool _containedBySection(Section source, Section target, Note note) {
-    var sourceOffset = _sectionOrigin(source);
-    var targetOffset = _sectionOrigin(target);
+  bool _containedBySection(
+      List<Section> sections, Section source, Section target, Note note) {
+    var sourceOffset = _sectionOrigin(sections, source);
+    var targetOffset = _sectionOrigin(sections, target);
 
     var noteCenter = note.center;
     noteCenter *= source.scale;
@@ -96,32 +96,34 @@ class _BookScreenState extends State<BookScreen> {
         sourceOffset.dy < bottom;
   }
 
-  Offset _sectionOrigin(Section section) {
-    if (section.id < 0) {
+  Offset _sectionOrigin(List<Section> sections, Section subject) {
+    if (subject.id < 0) {
       // main
       return Offset.zero;
     }
 
     double x = 0;
-    for (var chapter in _book.chapters) {
-      if (chapter.id < section.id) {
-        x += chapter.width * chapter.scale;
+    for (var section in sections) {
+      if (section.id > 0 && section.id < subject.id) {
+        x += section.width * section.scale;
       }
     }
 
-    return Offset(x, _book.main.height * _book.main.scale);
+    final main = sections.firstWhere((section) => section.id < 0);
+    return Offset(x, main.height * main.scale);
   }
 
-  void _centerNote(Section target, Note note) {
-    target.remove(note);
-    target.addCenter(note);
-  }
+  // void _centerNote(Section target, Note note) {
+  //   target.remove(note);
+  //   target.addCenter(note);
+  // }
 
-  void _moveNote(Section source, Section target, Note note) {
-    source.remove(note);
+  void _moveNote(BuildContext context, List<Section> sections, Section source,
+      Section target, Note note) {
+    context.read<NotesBloc>().add(RemoveNoteEvent(note));
 
-    var sourceOrigin = _sectionOrigin(source);
-    var targetOrigin = _sectionOrigin(target);
+    var sourceOrigin = _sectionOrigin(sections, source);
+    var targetOrigin = _sectionOrigin(sections, target);
 
     var noteCenter = note.center;
 
@@ -134,7 +136,7 @@ class _BookScreenState extends State<BookScreen> {
     note.left = noteCenter.dx - (note.width / 2);
     note.top = noteCenter.dy - (note.height / 2);
 
-    target.addNote(note: note);
+    context.read<NotesBloc>().add(AddNoteEvent(note));
   }
 
   scroll(double delta) {
@@ -145,6 +147,51 @@ class _BookScreenState extends State<BookScreen> {
     // _book.setChaptersScale((d / 1.5) + 0.3);
   }
 
+  _ready(BuildContext context, SectionsState state) {
+    final sections = (state as SectionsReadyState).list ?? [];
+    final main = sections.firstWhere((section) => section.id < 0);
+
+    return Stack(children: [
+      Column(children: [
+        SectionBackgroundWidget(
+          main,
+          minWidth: MediaQuery.of(context).size.width,
+        ),
+        Row(
+          children: createSectionBackgrounds(sections),
+        ),
+      ]),
+      Column(
+        children: [
+          SectionWidget(
+            section: main,
+            bounds: Bounds(bottom: false),
+            onMove: (source, note) {
+              _move(context, sections, source, note);
+            },
+            minWidth: MediaQuery.of(context).size.width,
+          ),
+          Row(
+            children: [
+              ...createChapters(context, sections),
+              Expanded(
+                child: IconButton(
+                  alignment: Alignment.center,
+                  icon: Icon(Icons.add),
+                  onPressed: () {
+                    context
+                        .read<SectionsBloc>()
+                        .add(AddSectionEvent(Section(id: 0, bookId: 0)));
+                  },
+                ),
+              )
+            ],
+          ),
+        ],
+      ),
+    ]);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Listener(
@@ -153,57 +200,26 @@ class _BookScreenState extends State<BookScreen> {
           scroll(signal.scrollDelta.dy);
         }
       },
-      child: ChangeNotifierProvider.value(
-        value: _book,
-        child: Scaffold(
-          body: Stack(
-            children: [
-              Column(children: [
-                ChangeNotifierProvider.value(
-                  value: _book.main,
-                  child: SectionBackgroundWidget(
-                    _book.main,
-                    minWidth: MediaQuery.of(context).size.width,
+      child: Scaffold(
+        body: BlocProvider(
+          create: (_) => SectionsBloc(widget.bookId),
+          child: BlocBuilder<SectionsBloc, SectionsState>(
+              builder: (context, state) {
+            switch (state.runtimeType) {
+              case SectionsLoadingState:
+                return Center(
+                  child: Container(
+                    height: 20.0,
+                    width: 20.0,
+                    child: CircularProgressIndicator(),
                   ),
-                ),
-                Consumer<Book>(builder: (context, book, child) {
-                  return Row(children: [
-                    ...createChapterBackgrounds(),
-                  ]);
-                })
-              ]),
-              Column(
-                children: [
-                  ChangeNotifierProvider.value(
-                    value: _book.main,
-                    child: SectionWidget(
-                      bounds: Bounds(bottom: false),
-                      onMove: (source, note) {
-                        _move(source, note);
-                      },
-                      minWidth: MediaQuery.of(context).size.width,
-                    ),
-                  ),
-                  Consumer<Book>(
-                    builder: (context, book, child) {
-                      return Row(children: [
-                        ...createChapters(),
-                        Expanded(
-                          child: IconButton(
-                            alignment: Alignment.center,
-                            icon: Icon(Icons.add),
-                            onPressed: () {
-                              _book.addChapter();
-                            },
-                          ),
-                        )
-                      ]);
-                    },
-                  ),
-                ],
-              ),
-            ],
-          ),
+                );
+                break;
+              default:
+                return _ready(context, state);
+                break;
+            }
+          }),
         ),
       ),
     );

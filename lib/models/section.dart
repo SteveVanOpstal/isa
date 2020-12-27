@@ -1,8 +1,5 @@
-import 'dart:collection';
-
+import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:isa/models/note.dart';
-import 'package:random_color/random_color.dart';
 
 class Section extends ChangeNotifier {
   final int id;
@@ -14,14 +11,13 @@ class Section extends ChangeNotifier {
   final Color color;
 
   Section(
-    this.id,
-    this.bookId,
-    this.width,
-    this.height,
-    this.scale,
-    this.title,
-    this.color,
-  ) {
+      {this.id,
+      this.bookId,
+      this.width = 200,
+      this.height = 200,
+      this.scale = 1,
+      this.title = '',
+      this.color = Colors.blue}) {
     // RandomColor _randomColor = RandomColor();
     // this.color = _randomColor.randomColor(
     //     colorSaturation: ColorSaturation.lowSaturation,
@@ -40,12 +36,18 @@ class Section extends ChangeNotifier {
       "height": height,
       "scale": scale,
       "title": title,
-      "color": color
+      "color": color.value
     };
   }
 
   static Section fromMap(Map<String, dynamic> map) {
-    return Section(map["id"], map["bookId"], map["width"], map["height"],
-        map["scale"], map["title"], map["color"]);
+    return Section(
+        id: map["id"],
+        bookId: map["bookId"],
+        width: map["width"],
+        height: map["height"],
+        scale: map["scale"],
+        title: map["title"],
+        color: Color(map["color"]));
   }
 }

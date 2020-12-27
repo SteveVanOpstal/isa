@@ -48,7 +48,9 @@ class NoteWidget extends StatelessWidget {
                   onTap: () {
                     showDialog(
                       context: context,
-                      child: NoteDialogWidget(note: note),
+                      builder: (context) {
+                        return NoteDialogWidget(note: note);
+                      },
                     );
                   },
                 ),

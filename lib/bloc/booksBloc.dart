@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:isa/database/daos/booksDao.dart';
-import 'package:isa/database/database.dart';
+import 'package:isa/database/daos/sectionsDao.dart';
 import 'package:isa/models/book.dart';
 
 // States
@@ -29,7 +29,8 @@ class GetBooksEvent extends BooksEvent {}
 
 // Bloc
 class BooksBloc extends Bloc<BooksEvent, BooksState> {
-  var dao = BooksDao();
+  var booksDao = BooksDao();
+  var sectionsDao = SectionsDao();
 
   BooksBloc() : super(BooksLoadingState()) {
     add(InitBooksEvent());
@@ -45,12 +46,15 @@ class BooksBloc extends Bloc<BooksEvent, BooksState> {
       case AddBookEvent:
         final title = (event as AddBookEvent).title;
         final book = Book(0, title, 0);
-        await dao.addBook(book);
+        await booksDao.addBook(book);
+        await sectionsDao.newSection(book.id, -1);
+        await sectionsDao.newSection(book.id, 0);
+        await sectionsDao.newSection(book.id, 1);
         yield BooksLoadingState();
         add(GetBooksEvent());
         break;
       case GetBooksEvent:
-        final books = await dao.getBooks();
+        final books = await booksDao.getBooks();
         yield BooksReadyState(books);
         break;
     }

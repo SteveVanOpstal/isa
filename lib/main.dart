@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:isa/bloc/booksBloc.dart';
+import 'package:isa/bookScreen.dart';
 import 'package:isa/models/book.dart';
 
 void main() {
@@ -44,14 +45,14 @@ class _MyHomePageState extends State<MyHomePage> {
       (b) => FlatButton(
         child: Text(b.title),
         onPressed: () {
-          // Navigator.push(
-          //     context,
-          //     PageRouteBuilder(
-          //       opaque: false,
-          //       pageBuilder: (BuildContext context, _, __) {
-          //         return BookScreen();
-          //       },
-          //     ));
+          Navigator.push(
+              context,
+              PageRouteBuilder(
+                opaque: false,
+                pageBuilder: (BuildContext context, _, __) {
+                  return BookScreen(b.id);
+                },
+              ));
         },
       ),
     );

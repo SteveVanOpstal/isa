@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:isa/database/daos/noteDao.dart';
 import 'package:isa/models/section.dart';
 import 'package:isa/widgets/color/colorLensMenuButton.dart';
 
@@ -15,6 +16,8 @@ class SectionHeadingWidget extends StatefulWidget {
 }
 
 class _SectionHeadingWidgetState extends State<SectionHeadingWidget> {
+  var dao = NoteDao();
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -38,9 +41,7 @@ class _SectionHeadingWidgetState extends State<SectionHeadingWidget> {
                   alignment: Alignment.center,
                   icon: Icon(Icons.add),
                   onPressed: () {
-                    setState(() {
-                      widget.section.addNote();
-                    });
+                    dao.addNewNote(widget.section);
                   },
                 ),
                 ColorLensMenuButton(section: widget.section),

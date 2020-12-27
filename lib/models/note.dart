@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 
-class Note extends ChangeNotifier {
+class Note {
   final int id;
   final int bookId;
   final int sectionId;
