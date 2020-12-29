@@ -1,5 +1,6 @@
 import 'package:isa/database/database.dart';
 import 'package:isa/models/section.dart';
+import 'package:random_color/random_color.dart';
 import 'package:sembast/sembast.dart';
 
 class SectionsDao {
@@ -33,22 +34,37 @@ class SectionsDao {
     // while (sectionIds.contains(newId)) {
     //   newId++;
     // }
-    final section = Section(id: sectionId, bookId: bookId, title: 'test');
+    var color = RandomColor().randomColor(
+        colorSaturation: ColorSaturation.lowSaturation,
+        colorBrightness: ColorBrightness.light);
+    final section = Section(
+        id: sectionId,
+        bookId: bookId,
+        title: 'Chapter ' + (sectionId + 1).toString(),
+        color: color);
 
     return await _sectionStore.add(bookDb, section.toMap());
   }
 
   Future<int> addSection(Section section) async {
     final bookDb = await _database.getBookDatabase(section.bookId);
-    // final sections = await getSections(section.bookId);
-    // final sectionIds = sections.map((s) => s.id);
+    final sections = await getSections(section.bookId);
+    final sectionIds = sections.map((s) => s.id);
 
-    // var newId = 0;
-    // while (sectionIds.contains(newId)) {
-    //   newId++;
-    // }
+    var newId = 0;
+    while (sectionIds.contains(newId)) {
+      newId++;
+    }
+
+    section.id = newId;
 
     return await _sectionStore.add(bookDb, section.toMap());
+  }
+
+  Future<int> updateSection(Section section) async {
+    final bookDb = await _database.getBookDatabase(section.bookId);
+    return await _sectionStore.update(bookDb, section.toMap(),
+        finder: Finder(filter: Filter.equals('id', section.id)));
   }
 
   Future<int> removeSection(Section section) async {

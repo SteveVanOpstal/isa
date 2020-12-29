@@ -2,14 +2,13 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:isa/bloc/notesBloc.dart';
+import 'package:isa/bloc/sectionBloc.dart';
 import 'package:isa/bloc/sectionsBloc.dart';
 import 'package:isa/widgets/notesWidget.dart';
 import 'package:isa/widgets/section/sectionBackgroundWidget.dart';
 import 'package:isa/widgets/section/sectionWidget.dart';
 import 'package:provider/provider.dart';
 
-import 'bloc/sectionBloc.dart';
-import 'models/note.dart';
 import 'models/section.dart';
 
 class BookScreen extends StatefulWidget {
@@ -24,119 +23,39 @@ class BookScreen extends StatefulWidget {
 class _BookScreenState extends State<BookScreen> {
   double offset = 0;
 
-  List<Widget> createChapters(BuildContext context, List<Section> sections) {
+  List<Widget> createChapters(BuildContext context, List<Section> sections,
+      List<SectionBloc> sectionBlocs, List<NotesBloc> notesBlocs) {
     List<Widget> list = [];
     for (var section in sections) {
       if (section.id < 0) {
         continue;
       }
       list.add(
-        SectionWidget(
-          section: section,
-          bounds: Bounds(top: false, left: false, right: false),
-          onMove: (source, note) {
-            _move(context, sections, source, note);
-          },
+        MultiBlocProvider(
+          providers: [
+            BlocProvider(create: (_) => sectionBlocs[section.id + 1]),
+            BlocProvider(create: (_) => notesBlocs[section.id + 1])
+          ],
+          child: SectionWidget(
+            bounds: Bounds(top: false, left: false, right: false),
+          ),
         ),
       );
     }
     return list;
   }
 
-  List<Widget> createSectionBackgrounds(List<Section> sections) {
+  List<Widget> createChapterBackgrounds(
+      List<Section> sections, List<SectionBloc> sectionBlocs) {
     return sections
-        .map((section) => BlocProvider(
-              create: (_) => SectionBloc(section),
-              child: SectionBackgroundWidget(section),
-            ))
+        .where((section) => section.id >= 0)
+        .map(
+          (section) => BlocProvider(
+            create: (_) => sectionBlocs[section.id + 1],
+            child: SectionBackgroundWidget(),
+          ),
+        )
         .toList();
-  }
-
-  _move(
-      BuildContext context, List<Section> sections, Section source, Note note) {
-    var matchedSection = _containedByChapter(sections, source, note);
-
-    if (matchedSection is Section) {
-      _moveNote(context, sections, source, matchedSection, note);
-      return;
-    }
-
-    context.read<NotesBloc>().add(CenterNoteEvent(note));
-  }
-
-  Section _containedByChapter(
-      List<Section> sections, Section source, Note note) {
-    for (var section in sections) {
-      if (_containedBySection(sections, source, section, note)) {
-        return section;
-      }
-    }
-
-    return null;
-  }
-
-  bool _containedBySection(
-      List<Section> sections, Section source, Section target, Note note) {
-    var sourceOffset = _sectionOrigin(sections, source);
-    var targetOffset = _sectionOrigin(sections, target);
-
-    var noteCenter = note.center;
-    noteCenter *= source.scale;
-
-    sourceOffset += noteCenter;
-
-    var top = targetOffset.dy;
-    var bottom = top + (target.height * target.scale);
-    var left = targetOffset.dx;
-    var right = left + (target.width * target.scale);
-
-    return sourceOffset.dx > left &&
-        sourceOffset.dx < right &&
-        sourceOffset.dy > top &&
-        sourceOffset.dy < bottom;
-  }
-
-  Offset _sectionOrigin(List<Section> sections, Section subject) {
-    if (subject.id < 0) {
-      // main
-      return Offset.zero;
-    }
-
-    double x = 0;
-    for (var section in sections) {
-      if (section.id > 0 && section.id < subject.id) {
-        x += section.width * section.scale;
-      }
-    }
-
-    final main = sections.firstWhere((section) => section.id < 0);
-    return Offset(x, main.height * main.scale);
-  }
-
-  // void _centerNote(Section target, Note note) {
-  //   target.remove(note);
-  //   target.addCenter(note);
-  // }
-
-  void _moveNote(BuildContext context, List<Section> sections, Section source,
-      Section target, Note note) {
-    context.read<NotesBloc>().add(RemoveNoteEvent(note));
-
-    var sourceOrigin = _sectionOrigin(sections, source);
-    var targetOrigin = _sectionOrigin(sections, target);
-
-    var noteCenter = note.center;
-
-    noteCenter *= source.scale;
-
-    noteCenter += sourceOrigin - targetOrigin;
-
-    noteCenter /= target.scale;
-
-    note.left = noteCenter.dx - (note.width / 2);
-    note.top = noteCenter.dy - (note.height / 2);
-
-    context.read<NotesBloc>().add(AddNoteEvent(note));
   }
 
   scroll(double delta) {
@@ -149,31 +68,40 @@ class _BookScreenState extends State<BookScreen> {
 
   _ready(BuildContext context, SectionsState state) {
     final sections = (state as SectionsReadyState).list ?? [];
-    final main = sections.firstWhere((section) => section.id < 0);
+    // ignore: close_sinks
+    final sectionBlocs = sections.map((s) => SectionBloc(s)).toList();
+    final notesBlocs = sections.map((s) => NotesBloc(s.bookId, s.id)).toList();
 
     return Stack(children: [
       Column(children: [
-        SectionBackgroundWidget(
-          main,
-          minWidth: MediaQuery.of(context).size.width,
+        MultiBlocProvider(
+          providers: [
+            BlocProvider(create: (_) => sectionBlocs[0]),
+            BlocProvider(create: (_) => notesBlocs[0])
+          ],
+          child: SectionBackgroundWidget(
+            minWidth: MediaQuery.of(context).size.width,
+          ),
         ),
         Row(
-          children: createSectionBackgrounds(sections),
+          children: createChapterBackgrounds(sections, sectionBlocs),
         ),
       ]),
       Column(
         children: [
-          SectionWidget(
-            section: main,
-            bounds: Bounds(bottom: false),
-            onMove: (source, note) {
-              _move(context, sections, source, note);
-            },
-            minWidth: MediaQuery.of(context).size.width,
+          MultiBlocProvider(
+            providers: [
+              BlocProvider(create: (_) => sectionBlocs[0]),
+              BlocProvider(create: (_) => notesBlocs[0])
+            ],
+            child: SectionWidget(
+              bounds: Bounds(bottom: false),
+              minWidth: MediaQuery.of(context).size.width,
+            ),
           ),
           Row(
             children: [
-              ...createChapters(context, sections),
+              ...createChapters(context, sections, sectionBlocs, notesBlocs),
               Expanded(
                 child: IconButton(
                   alignment: Alignment.center,

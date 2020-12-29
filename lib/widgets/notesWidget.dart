@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:isa/bloc/noteBloc.dart';
 import 'package:isa/bloc/notesBloc.dart';
 import 'package:isa/models/note.dart';
 import 'package:isa/models/section.dart';
@@ -216,27 +217,26 @@ class _NotesWidgetState extends State<NotesWidget>
     }
   }
 
-  createNoteWidgets(Section section, List<Note> notes) {
+  createNoteWidgets(BuildContext context, Section section, List<Note> notes) {
     List<Widget> list = [];
     for (var note in notes) {
-      list.add(
-        // ChangeNotifierProvider.value(
-        //   value: note,
-        //   child:
-        NoteWidget(
+      // ignore: close_sinks
+      final noteBloc = NoteBloc(note);
+      list.add(BlocProvider(
+        create: (_) => noteBloc,
+        child: NoteWidget(
             color: section.color,
             onPan: (offset) {
-              // setState(() {
               _pan(section, note, offset);
-              // });
+              noteBloc.add(UpdateNoteEvent(note));
             },
             onPanEnd: () {
               _checkNotesOutOfBounds();
+              noteBloc.add(UpdateNoteEvent(note));
               controller.reset();
               controller.forward();
             }),
-        // ),
-      );
+      ));
     }
     return list;
   }
@@ -260,7 +260,7 @@ class _NotesWidgetState extends State<NotesWidget>
           _notes = notes;
           return Stack(
             clipBehavior: Clip.none,
-            children: createNoteWidgets(widget.section, notes),
+            children: createNoteWidgets(context, widget.section, notes),
           );
           break;
       }

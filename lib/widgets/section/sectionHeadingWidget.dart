@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:isa/database/daos/noteDao.dart';
+import 'package:isa/bloc/notesBloc.dart';
+import 'package:isa/bloc/sectionBloc.dart';
 import 'package:isa/models/section.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:isa/widgets/color/colorLensMenuButton.dart';
 
 class SectionHeadingWidget extends StatefulWidget {
@@ -16,8 +18,6 @@ class SectionHeadingWidget extends StatefulWidget {
 }
 
 class _SectionHeadingWidgetState extends State<SectionHeadingWidget> {
-  var dao = NoteDao();
-
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -41,10 +41,17 @@ class _SectionHeadingWidgetState extends State<SectionHeadingWidget> {
                   alignment: Alignment.center,
                   icon: Icon(Icons.add),
                   onPressed: () {
-                    dao.addNewNote(widget.section);
+                    // context
+                    //     .read<BooksBloc>().state
+                    context.read<NotesBloc>().add(AddNewNoteEvent());
+                    // dao.addNewNote(widget.section);
                   },
                 ),
-                ColorLensMenuButton(section: widget.section),
+                ColorLensMenuButton(onColorChange: (color) {
+                  context
+                      .read<SectionBloc>()
+                      .add(UpdateSectionColorEvent(color));
+                }),
               ],
             ),
           ),

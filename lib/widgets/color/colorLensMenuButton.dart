@@ -1,20 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:isa/models/section.dart';
 import 'package:isa/widgets/color/colorButtonWidget.dart';
 
 class _ColorDialogWidget extends StatelessWidget {
-  final double top;
-  final double left;
-  final Section section;
+  final Function(Color) onColorChange;
 
-  _ColorDialogWidget({@required this.section, this.top, this.left});
+  _ColorDialogWidget({this.onColorChange});
 
   _colorWidgets(context, count) {
     List<Widget> colorWidgets = [];
     for (var i = 0; i < count; i++) {
       colorWidgets.add(ColorButtonWidget(
         onPressed: (color) {
-          // section.setColor(color);
+          onColorChange(color);
           Navigator.pop(context);
         },
       ));
@@ -52,9 +49,9 @@ class _ColorDialogWidget extends StatelessWidget {
 }
 
 class ColorLensMenuButton extends StatelessWidget {
-  final Section section;
+  final Function(Color) onColorChange;
 
-  ColorLensMenuButton({@required this.section});
+  ColorLensMenuButton({this.onColorChange});
 
   @override
   Widget build(BuildContext context) {
@@ -78,7 +75,7 @@ class ColorLensMenuButton extends StatelessWidget {
                     Positioned(
                       left: position.dx,
                       top: position.dy,
-                      child: _ColorDialogWidget(section: section),
+                      child: _ColorDialogWidget(onColorChange: onColorChange),
                     ),
                   ],
                 ),

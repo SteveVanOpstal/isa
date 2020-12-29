@@ -1,14 +1,12 @@
 import 'package:isa/database/daos/sectionsDao.dart';
 import 'package:isa/database/database.dart';
 import 'package:isa/models/note.dart';
-import 'package:isa/models/section.dart';
 import 'package:sembast/sembast.dart';
 
 class NoteDao {
   final _database = IsaDatabase();
 
   final _sectionsDao = SectionsDao();
-  final _bookStore = StoreRef('book');
   final _noteStore = intMapStoreFactory.store('note');
 
   Future<Database> _getBookDatabase(Note note) async {
@@ -22,8 +20,8 @@ class NoteDao {
     return records.map((r) => Note.fromMap(r.value)).toList();
   }
 
-  void addNewNote(Section section) async {
-    var newNote = Note(0, section.bookId, section.id, 0, 0, 200, 200, '', '');
+  void addNewNote(int bookId, int sectionId) async {
+    var newNote = Note(0, bookId, sectionId, 0, 0, 100, 100, '', '');
     return addCenter(newNote);
   }
 
@@ -33,6 +31,21 @@ class NoteDao {
     return await _noteStore.add(bookDb, note.toMap());
   }
 
+  Future<int> updateNote(Note note) async {
+    final bookDb = await _getBookDatabase(note);
+
+    return await _noteStore.update(
+      bookDb,
+      note.toMap(),
+      finder: Finder(
+        filter: Filter.and([
+          Filter.equals('sectionId', note.sectionId),
+          Filter.equals('bookId', note.bookId)
+        ]),
+      ),
+    );
+  }
+
   void addCenter(Note note) async {
     final bookDb = await _getBookDatabase(note);
 
@@ -40,7 +53,7 @@ class NoteDao {
     note.top = section.height / 2 - note.height / 2;
     note.left = section.width / 2 - note.width / 2;
 
-    _bookStore.record('note').add(bookDb, note.toMap());
+    _noteStore.add(bookDb, note.toMap());
   }
 
   Future<int> removeNote(Note note) async {

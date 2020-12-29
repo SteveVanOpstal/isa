@@ -2,27 +2,32 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
 class Section extends ChangeNotifier {
-  final int id;
+  int id;
   final int bookId;
   final double width;
   final double height;
   final double scale;
   final String title;
-  final Color color;
+  Color color;
 
   Section(
       {this.id,
       this.bookId,
-      this.width = 200,
-      this.height = 200,
+      this.width = 600,
+      this.height = 600,
       this.scale = 1,
       this.title = '',
-      this.color = Colors.blue}) {
-    // RandomColor _randomColor = RandomColor();
-    // this.color = _randomColor.randomColor(
-    //     colorSaturation: ColorSaturation.lowSaturation,
-    //     colorBrightness: ColorBrightness.light);
-  }
+      this.color = Colors.blue});
+
+  Section.clone(Section original)
+      : this(
+            id: original.id,
+            bookId: original.bookId,
+            width: original.width,
+            height: original.height,
+            scale: original.scale,
+            title: original.title,
+            color: original.color);
 
   // final List<Note> _notes = [];
 

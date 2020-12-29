@@ -6,8 +6,8 @@ class Note {
   final int sectionId;
   double left = 0;
   double top = 0;
-  double width = 200;
-  double height = 200;
+  double width = 100;
+  double height = 100;
   String title = '';
   String note = '';
 
@@ -22,6 +22,18 @@ class Note {
     this.title,
     this.note,
   );
+
+  Note.clone(Note original)
+      : this(
+            original.id,
+            original.bookId,
+            original.sectionId,
+            original.left,
+            original.top,
+            original.width,
+            original.height,
+            original.title,
+            original.note);
 
   void setLocation(double left, double top) {
     if (left != this.left && top != this.top) {
