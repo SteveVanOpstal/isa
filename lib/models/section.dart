@@ -6,7 +6,6 @@ class Section extends ChangeNotifier {
   final int bookId;
   final double width;
   final double height;
-  final double scale;
   final String title;
   Color color;
 
@@ -15,7 +14,6 @@ class Section extends ChangeNotifier {
       this.bookId,
       this.width = 600,
       this.height = 600,
-      this.scale = 1,
       this.title = '',
       this.color = Colors.blue});
 
@@ -25,13 +23,27 @@ class Section extends ChangeNotifier {
             bookId: original.bookId,
             width: original.width,
             height: original.height,
-            scale: original.scale,
             title: original.title,
             color: original.color);
 
-  // final List<Note> _notes = [];
+  double getScale(double offset) {
+    var d = offset / 1000;
 
-  // UnmodifiableListView<Note> get notes => UnmodifiableListView(_notes);
+    if (id < 0) {
+      return 1 - d;
+    } else {
+      return (d / 1.5) + 0.3;
+    }
+  }
+
+  double scaledWidth(double offset, double minWidth) {
+    var sectionWidth = width * getScale(offset);
+    return sectionWidth < minWidth ? minWidth : sectionWidth;
+  }
+
+  double scaledHeight(double offset) {
+    return height * getScale(offset);
+  }
 
   Map<String, dynamic> toMap() {
     return {
@@ -39,7 +51,6 @@ class Section extends ChangeNotifier {
       "bookId": bookId,
       "width": width,
       "height": height,
-      "scale": scale,
       "title": title,
       "color": color.value
     };
@@ -51,7 +62,6 @@ class Section extends ChangeNotifier {
         bookId: map["bookId"],
         width: map["width"],
         height: map["height"],
-        scale: map["scale"],
         title: map["title"],
         color: Color(map["color"]));
   }

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:isa/bloc/bookBloc.dart';
 import 'package:isa/bloc/notesBloc.dart';
 import 'package:isa/bloc/sectionBloc.dart';
 import 'package:isa/bloc/sectionsBloc.dart';
+import 'package:isa/models/book.dart';
 import 'package:isa/models/note.dart';
 import 'package:isa/models/section.dart';
 import 'package:isa/widgets/notesWidget.dart';
@@ -19,14 +21,7 @@ class SectionWidget extends StatefulWidget {
 }
 
 class _SectionWidgetState extends State<SectionWidget> {
-  double _width(Section section) {
-    var sectionWidth = section.width * section.scale;
-    return sectionWidth < widget.minWidth ? widget.minWidth : sectionWidth;
-  }
-
-  double _height(Section section) {
-    return section.height * section.scale;
-  }
+  double offset = 0.0;
 
   _move(BuildContext context, Section source, Note note) {
     final sections =
@@ -58,14 +53,14 @@ class _SectionWidgetState extends State<SectionWidget> {
     var targetOffset = _sectionOrigin(sections, target);
 
     var noteCenter = note.center;
-    noteCenter *= source.scale;
+    noteCenter *= source.getScale(offset);
 
     sourceOffset += noteCenter;
 
     var top = targetOffset.dy;
-    var bottom = top + (target.height * target.scale);
+    var bottom = top + (target.height * target.getScale(offset));
     var left = targetOffset.dx;
-    var right = left + (target.width * target.scale);
+    var right = left + (target.width * target.getScale(offset));
 
     return sourceOffset.dx > left &&
         sourceOffset.dx < right &&
@@ -82,18 +77,13 @@ class _SectionWidgetState extends State<SectionWidget> {
     double x = 0;
     for (var section in sections) {
       if (section.id > 0 && section.id < subject.id) {
-        x += section.width * section.scale;
+        x += section.width * section.getScale(offset);
       }
     }
 
     final main = sections.firstWhere((section) => section.id < 0);
-    return Offset(x, main.height * main.scale);
+    return Offset(x, main.height * main.getScale(offset));
   }
-
-  // void _centerNote(Section target, Note note) {
-  //   target.remove(note);
-  //   target.addCenter(note);
-  // }
 
   void _moveNote(BuildContext context, List<Section> sections, Section source,
       Section target, Note note) {
@@ -104,11 +94,11 @@ class _SectionWidgetState extends State<SectionWidget> {
 
     var noteCenter = note.center;
 
-    noteCenter *= source.scale;
+    noteCenter *= source.getScale(offset);
 
     noteCenter += sourceOrigin - targetOrigin;
 
-    noteCenter /= target.scale;
+    noteCenter /= target.getScale(offset);
 
     note.left = noteCenter.dx - (note.width / 2);
     note.top = noteCenter.dy - (note.height / 2);
@@ -118,36 +108,41 @@ class _SectionWidgetState extends State<SectionWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<SectionBloc, Section>(builder: (context, state) {
-      return Stack(
-        clipBehavior: Clip.none,
-        children: [
-          SizedBox(
-            width: _width(state),
-            height: _height(state),
-            child: FittedBox(
-              fit: BoxFit.cover,
-              alignment: Alignment.topLeft,
-              child: SizedBox(
-                width: state.width,
-                height: state.height,
-                child: NotesWidget(
-                  section: state,
-                  bounds: widget.bounds,
-                  onMove: (note) {
-                    _move(context, state, note);
-                  },
+    return BlocBuilder<BookBloc, Book>(builder: (_, bookState) {
+      return BlocBuilder<SectionBloc, Section>(builder: (context, state) {
+        offset = bookState.offset;
+        final width = state.scaledWidth(offset, widget.minWidth);
+        final height = state.scaledHeight(offset);
+        return Stack(
+          clipBehavior: Clip.none,
+          children: [
+            SizedBox(
+              width: width,
+              height: height,
+              child: FittedBox(
+                fit: BoxFit.cover,
+                alignment: Alignment.topLeft,
+                child: SizedBox(
+                  width: state.width,
+                  height: state.height,
+                  child: NotesWidget(
+                    section: state,
+                    bounds: widget.bounds,
+                    onMove: (note) {
+                      _move(context, state, note);
+                    },
+                  ),
                 ),
               ),
             ),
-          ),
-          SectionHeadingWidget(
-            section: state,
-            width: _width(state),
-            height: _height(state),
-          ),
-        ],
-      );
+            SectionHeadingWidget(
+              section: state,
+              width: width,
+              height: height,
+            ),
+          ],
+        );
+      });
     });
   }
 }

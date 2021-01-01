@@ -1,6 +1,8 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:isa/bloc/bookBloc.dart';
+import 'package:isa/bloc/booksBloc.dart';
 import 'package:isa/bloc/notesBloc.dart';
 import 'package:isa/bloc/sectionBloc.dart';
 import 'package:isa/bloc/sectionsBloc.dart';
@@ -23,18 +25,18 @@ class BookScreen extends StatefulWidget {
 class _BookScreenState extends State<BookScreen> {
   double offset = 0;
 
-  List<Widget> createChapters(BuildContext context, List<Section> sections,
+  List<Widget> createChapters(BuildContext context,
       List<SectionBloc> sectionBlocs, List<NotesBloc> notesBlocs) {
     List<Widget> list = [];
-    for (var section in sections) {
-      if (section.id < 0) {
+    for (var sectionBloc in sectionBlocs) {
+      if (sectionBloc.state.id < 0) {
         continue;
       }
       list.add(
         MultiBlocProvider(
           providers: [
-            BlocProvider(create: (_) => sectionBlocs[section.id + 1]),
-            BlocProvider(create: (_) => notesBlocs[section.id + 1])
+            BlocProvider(create: (_) => sectionBloc),
+            BlocProvider(create: (_) => notesBlocs[sectionBloc.state.id + 1])
           ],
           child: SectionWidget(
             bounds: Bounds(top: false, left: false, right: false),
@@ -45,63 +47,56 @@ class _BookScreenState extends State<BookScreen> {
     return list;
   }
 
-  List<Widget> createChapterBackgrounds(
-      List<Section> sections, List<SectionBloc> sectionBlocs) {
-    return sections
-        .where((section) => section.id >= 0)
+  List<Widget> createChapterBackgrounds(List<SectionBloc> sectionBlocs) {
+    return sectionBlocs
+        .where((sectionBloc) => sectionBloc.state.id >= 0)
         .map(
-          (section) => BlocProvider(
-            create: (_) => sectionBlocs[section.id + 1],
+          (sectionBloc) => BlocProvider(
+            create: (_) => sectionBloc,
             child: SectionBackgroundWidget(),
           ),
         )
         .toList();
   }
 
-  scroll(double delta) {
-    // offset += delta;
-    // var d = offset / 1000;
-
-    // _book.main.setScale(1 - d);
-    // _book.setChaptersScale((d / 1.5) + 0.3);
-  }
-
-  _ready(BuildContext context, SectionsState state) {
-    final sections = (state as SectionsReadyState).list ?? [];
-    // ignore: close_sinks
-    final sectionBlocs = sections.map((s) => SectionBloc(s)).toList();
-    final notesBlocs = sections.map((s) => NotesBloc(s.bookId, s.id)).toList();
-
-    return Stack(children: [
-      Column(children: [
-        MultiBlocProvider(
-          providers: [
-            BlocProvider(create: (_) => sectionBlocs[0]),
-            BlocProvider(create: (_) => notesBlocs[0])
-          ],
-          child: SectionBackgroundWidget(
-            minWidth: MediaQuery.of(context).size.width,
-          ),
-        ),
-        Row(
-          children: createChapterBackgrounds(sections, sectionBlocs),
-        ),
-      ]),
-      Column(
-        children: [
-          MultiBlocProvider(
-            providers: [
-              BlocProvider(create: (_) => sectionBlocs[0]),
-              BlocProvider(create: (_) => notesBlocs[0])
-            ],
-            child: SectionWidget(
-              bounds: Bounds(bottom: false),
-              minWidth: MediaQuery.of(context).size.width,
+  _ready(BuildContext context, List<SectionBloc> sectionBlocs,
+      List<NotesBloc> notesBlocs) {
+    return Listener(
+      onPointerSignal: (signal) {
+        if (signal is PointerScrollEvent) {
+          offset += signal.scrollDelta.dy;
+          context.read<BookBloc>().add(UpdateBookOffsetEvent(offset));
+        }
+      },
+      child: Scaffold(
+        body: Stack(children: [
+          Column(children: [
+            MultiBlocProvider(
+              providers: [
+                BlocProvider(create: (_) => sectionBlocs[0]),
+                BlocProvider(create: (_) => notesBlocs[0])
+              ],
+              child: SectionBackgroundWidget(
+                minWidth: MediaQuery.of(context).size.width,
+              ),
             ),
-          ),
-          Row(
-            children: [
-              ...createChapters(context, sections, sectionBlocs, notesBlocs),
+            Row(
+              children: createChapterBackgrounds(sectionBlocs),
+            ),
+          ]),
+          Column(children: [
+            MultiBlocProvider(
+              providers: [
+                BlocProvider(create: (_) => sectionBlocs[0]),
+                BlocProvider(create: (_) => notesBlocs[0])
+              ],
+              child: SectionWidget(
+                bounds: Bounds(bottom: false),
+                minWidth: MediaQuery.of(context).size.width,
+              ),
+            ),
+            Row(children: [
+              ...createChapters(context, sectionBlocs, notesBlocs),
               Expanded(
                 child: IconButton(
                   alignment: Alignment.center,
@@ -113,24 +108,25 @@ class _BookScreenState extends State<BookScreen> {
                   },
                 ),
               )
-            ],
-          ),
-        ],
+            ]),
+          ]),
+        ]),
       ),
-    ]);
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Listener(
-      onPointerSignal: (signal) {
-        if (signal is PointerScrollEvent) {
-          scroll(signal.scrollDelta.dy);
-        }
-      },
-      child: Scaffold(
-        body: BlocProvider(
-          create: (_) => SectionsBloc(widget.bookId),
+    return BlocProvider.value(
+      value: context.watch<BooksBloc>(),
+      child: BlocBuilder<BooksBloc, BooksState>(builder: (context, state) {
+        final books = (state as BooksReadyState).list;
+        final book = books.firstWhere((book) => book.id == widget.bookId);
+        return MultiBlocProvider(
+          providers: [
+            BlocProvider(create: (_) => BookBloc(book)),
+            BlocProvider(create: (_) => SectionsBloc(widget.bookId)),
+          ],
           child: BlocBuilder<SectionsBloc, SectionsState>(
               builder: (context, state) {
             switch (state.runtimeType) {
@@ -144,12 +140,17 @@ class _BookScreenState extends State<BookScreen> {
                 );
                 break;
               default:
-                return _ready(context, state);
+                final sections = (state as SectionsReadyState).list ?? [];
+                final sectionBlocs =
+                    sections.map((s) => SectionBloc(s)).toList();
+                final notesBlocs =
+                    sections.map((s) => NotesBloc(s.bookId, s.id)).toList();
+                return _ready(context, sectionBlocs, notesBlocs);
                 break;
             }
           }),
-        ),
-      ),
+        );
+      }),
     );
   }
 }

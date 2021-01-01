@@ -12,6 +12,18 @@ class BooksDao {
     await _bookStore.record('book').put(bookDb, book.toMap());
   }
 
+  Future<int> updateBook(Book book) async {
+    final bookDb = await _database.getBookDatabase(book.id);
+
+    return await _bookStore.update(
+      bookDb,
+      book.toMap(),
+      finder: Finder(
+        filter: Filter.equals('id', book.id),
+      ),
+    );
+  }
+
   Future<Book> getBook(int bookId) async {
     final bookDb = await _database.getBookDatabase(bookId);
     return _bookStore.record('book').get(bookDb);

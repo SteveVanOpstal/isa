@@ -11,14 +11,17 @@ void main() {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
+    return BlocProvider(
+      create: (_) => BooksBloc(),
+      child: MaterialApp(
+        title: 'Flutter Demo',
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+          visualDensity: VisualDensity.adaptivePlatformDensity,
+        ),
+        home: MyHomePage(),
+        debugShowCheckedModeBanner: false,
       ),
-      home: MyHomePage(),
-      debugShowCheckedModeBanner: false,
     );
   }
 }
@@ -40,7 +43,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  _buildBooks(List<Book> books) {
+  _buildBooks(BuildContext context, List<Book> books) {
     return books.map(
       (b) => FlatButton(
         child: Text(b.title),
@@ -60,45 +63,42 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => BooksBloc(),
-      child: BlocBuilder<BooksBloc, BooksState>(builder: (context, state) {
-        switch (state.runtimeType) {
-          case BooksLoadingState:
-            return Center(
-                child: Container(
-                    height: 20.0,
-                    width: 20.0,
-                    child: CircularProgressIndicator()));
-            break;
-          default:
-            final list = (state as BooksReadyState).list ?? [];
-            return Scaffold(
-              appBar: AppBar(
-                title: Center(child: Text(widget.title)),
-              ),
-              body: SafeArea(
-                child: Center(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      ..._buildBooks(list),
-                      FloatingActionButton(
-                        child: Icon(Icons.add),
-                        onPressed: () {
-                          context
-                              .read<BooksBloc>()
-                              .add(AddBookEvent('Working Title'));
-                        },
-                      ),
-                    ],
-                  ),
+    return BlocBuilder<BooksBloc, BooksState>(builder: (context, state) {
+      switch (state.runtimeType) {
+        case BooksLoadingState:
+          return Center(
+              child: Container(
+                  height: 20.0,
+                  width: 20.0,
+                  child: CircularProgressIndicator()));
+          break;
+        default:
+          final list = (state as BooksReadyState).list ?? [];
+          return Scaffold(
+            appBar: AppBar(
+              title: Center(child: Text(widget.title)),
+            ),
+            body: SafeArea(
+              child: Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    ..._buildBooks(context, list),
+                    FloatingActionButton(
+                      child: Icon(Icons.add),
+                      onPressed: () {
+                        context
+                            .read<BooksBloc>()
+                            .add(AddBookEvent('Working Title'));
+                      },
+                    ),
+                  ],
                 ),
               ),
-            );
-            break;
-        }
-      }),
-    );
+            ),
+          );
+          break;
+      }
+    });
   }
 }

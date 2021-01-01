@@ -4,22 +4,18 @@ const CHAPTER_HEIGHT = 800.0;
 class Book {
   final int id;
   final String title;
-  final double scrollOffset;
+  double offset = 0;
 
-  Book(this.id, this.title, this.scrollOffset);
+  Book(this.id, this.title, this.offset);
 
-  // final Section main = Section(-1, width: 2000, height: 800, title: '');
-  // final List<Section> _chapters = [];
-  // UnmodifiableListView<Section> get chapters {
-  //   _chapters.sort((c1, c2) => c1.id.compareTo(c2.id));
-  //   return UnmodifiableListView(_chapters);
-  // }
+  Book.clone(Book original)
+      : this(original.id, original.title, original.offset);
 
   Map<String, dynamic> toMap() {
-    return {"id": id, "title": title, "scrollOffset": scrollOffset};
+    return {"id": id, "title": title, "offset": offset};
   }
 
   static Book fromMap(Map<String, dynamic> map) {
-    return Book(map["id"], map["title"], map["scrollOffset"]);
+    return Book(map["id"], map["title"], map["offset"]);
   }
 }

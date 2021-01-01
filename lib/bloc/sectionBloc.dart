@@ -6,18 +6,6 @@ import 'package:isa/models/section.dart';
 // Events
 abstract class SectionEvent {}
 
-// class InitSectionEvent extends SectionEvent {
-//   final int bookId;
-
-//   InitSectionEvent(this.bookId);
-// }
-
-// class AddSectionEvent extends SectionEvent {
-//   final Section section;
-
-//   AddSectionEvent(this.section);
-// }
-
 class UpdateSectionColorEvent extends SectionEvent {
   final Color color;
 

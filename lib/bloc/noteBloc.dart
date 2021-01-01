@@ -6,18 +6,6 @@ import 'package:isa/models/note.dart';
 // Events
 abstract class NoteEvent {}
 
-// class InitNoteEvent extends NoteEvent {
-//   final int bookId;
-
-//   InitNoteEvent(this.bookId);
-// }
-
-// class AddNoteEvent extends NoteEvent {
-//   final Note Note;
-
-//   AddNoteEvent(this.Note);
-// }
-
 class UpdateNoteColorEvent extends NoteEvent {
   final Color color;
 
