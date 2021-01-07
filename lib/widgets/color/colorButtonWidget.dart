@@ -3,11 +3,10 @@ import 'package:random_color/random_color.dart';
 
 class ColorButtonWidget extends StatelessWidget {
   final Color color;
-  final Function(Color) onInit;
   final Function(Color) onPressed;
   final RandomColor _randomColor = RandomColor();
 
-  ColorButtonWidget({@required this.onPressed, this.color, this.onInit});
+  ColorButtonWidget({@required this.onPressed, this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +15,7 @@ class ColorButtonWidget extends StatelessWidget {
             colorSaturation: ColorSaturation.lowSaturation,
             colorBrightness: ColorBrightness.light);
     return Container(
-      margin: EdgeInsets.only(left: 10.0, bottom: 10.0),
+      margin: EdgeInsets.all(5.0),
       width: 40.0,
       height: 40.0,
       child: RaisedButton(

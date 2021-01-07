@@ -59,7 +59,7 @@ class ColorLensMenuButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return IconButton(
-      color: Colors.white,
+      color: section.color,
       alignment: Alignment.center,
       icon: Icon(Icons.color_lens),
       onPressed: () {
