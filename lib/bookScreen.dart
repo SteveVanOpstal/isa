@@ -1,211 +1,156 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:isa/bloc/bookBloc.dart';
+import 'package:isa/bloc/booksBloc.dart';
+import 'package:isa/bloc/notesBloc.dart';
+import 'package:isa/bloc/sectionBloc.dart';
+import 'package:isa/bloc/sectionsBloc.dart';
+import 'package:isa/widgets/notesWidget.dart';
 import 'package:isa/widgets/section/sectionBackgroundWidget.dart';
 import 'package:isa/widgets/section/sectionWidget.dart';
-import 'package:isa/widgets/notesWidget.dart';
 import 'package:provider/provider.dart';
 
-import 'models/book.dart';
-import 'models/note.dart';
 import 'models/section.dart';
 
 class BookScreen extends StatefulWidget {
+  final int bookId;
+
+  const BookScreen(this.bookId);
+
   @override
   _BookScreenState createState() => _BookScreenState();
 }
 
 class _BookScreenState extends State<BookScreen> {
-  final Book _book = Book();
   double offset = 0;
 
-  createChapters() {
-    var chapters = [];
-    for (var chapter in _book.chapters) {
-      chapters.add(
-        ChangeNotifierProvider.value(
-          value: chapter,
+  List<Widget> createChapters(BuildContext context,
+      List<SectionBloc> sectionBlocs, List<NotesBloc> notesBlocs) {
+    List<Widget> list = [];
+    for (var sectionBloc in sectionBlocs) {
+      if (sectionBloc.state.id < 0) {
+        continue;
+      }
+      list.add(
+        MultiBlocProvider(
+          providers: [
+            BlocProvider(create: (_) => sectionBloc),
+            BlocProvider(create: (_) => notesBlocs[sectionBloc.state.id + 1])
+          ],
           child: SectionWidget(
             bounds: Bounds(top: false, left: false, right: false),
-            onMove: (source, note) {
-              _move(source, note);
-            },
           ),
         ),
       );
     }
-    return chapters;
+    return list;
   }
 
-  createChapterBackgrounds() {
-    var chapters = [];
-    for (var chapter in _book.chapters) {
-      chapters.add(
-        ChangeNotifierProvider.value(
-          value: chapter,
-          child: SectionBackgroundWidget(chapter),
-        ),
-      );
-    }
-    return chapters;
+  List<Widget> createChapterBackgrounds(List<SectionBloc> sectionBlocs) {
+    return sectionBlocs
+        .where((sectionBloc) => sectionBloc.state.id >= 0)
+        .map(
+          (sectionBloc) => BlocProvider(
+            create: (_) => sectionBloc,
+            child: SectionBackgroundWidget(),
+          ),
+        )
+        .toList();
   }
 
-  _move(Section source, Note note) {
-    if (_containedBySection(source, _book.main, note)) {
-      _moveNote(source, _book.main, note);
-      return;
-    }
-
-    var matchedSection = _containedByChapter(source, note);
-
-    if (matchedSection is Section) {
-      _moveNote(source, matchedSection, note);
-      return;
-    }
-
-    _centerNote(source, note);
-  }
-
-  Section _containedByChapter(Section source, Note note) {
-    for (var i = 0; i < _book.chapters.length; i++) {
-      var chapter = _book.chapters[i];
-      if (_containedBySection(source, chapter, note)) {
-        return chapter;
-      }
-    }
-
-    return null;
-  }
-
-  bool _containedBySection(Section source, Section target, Note note) {
-    var sourceOffset = _sectionOrigin(source);
-    var targetOffset = _sectionOrigin(target);
-
-    var noteCenter = note.center;
-    noteCenter *= source.scale;
-
-    sourceOffset += noteCenter;
-
-    var top = targetOffset.dy;
-    var bottom = top + (target.height * target.scale);
-    var left = targetOffset.dx;
-    var right = left + (target.width * target.scale);
-
-    return sourceOffset.dx > left &&
-        sourceOffset.dx < right &&
-        sourceOffset.dy > top &&
-        sourceOffset.dy < bottom;
-  }
-
-  Offset _sectionOrigin(Section section) {
-    if (section.id < 0) {
-      // main
-      return Offset.zero;
-    }
-
-    double x = 0;
-    for (var chapter in _book.chapters) {
-      if (chapter.id < section.id) {
-        x += chapter.width * chapter.scale;
-      }
-    }
-
-    return Offset(x, _book.main.height * _book.main.scale);
-  }
-
-  void _centerNote(Section target, Note note) {
-    target.remove(note);
-    target.addCenter(note);
-  }
-
-  void _moveNote(Section source, Section target, Note note) {
-    source.remove(note);
-
-    var sourceOrigin = _sectionOrigin(source);
-    var targetOrigin = _sectionOrigin(target);
-
-    var noteCenter = note.center;
-
-    noteCenter *= source.scale;
-
-    noteCenter += sourceOrigin - targetOrigin;
-
-    noteCenter /= target.scale;
-
-    note.left = noteCenter.dx - (note.width / 2);
-    note.top = noteCenter.dy - (note.height / 2);
-
-    target.addNote(note: note);
-  }
-
-  scroll(double delta) {
-    offset += delta;
-    var d = offset / 1000;
-
-    _book.main.setScale(1 - d);
-    _book.setChaptersScale((d / 1.5) + 0.3);
+  _ready(BuildContext context, List<SectionBloc> sectionBlocs,
+      List<NotesBloc> notesBlocs) {
+    return Listener(
+      onPointerSignal: (signal) {
+        if (signal is PointerScrollEvent) {
+          offset += signal.scrollDelta.dy;
+          context.read<BookBloc>().add(UpdateBookOffsetEvent(offset));
+        }
+      },
+      child: Scaffold(
+        body: Stack(children: [
+          Column(children: [
+            MultiBlocProvider(
+              providers: [
+                BlocProvider(create: (_) => sectionBlocs[0]),
+                BlocProvider(create: (_) => notesBlocs[0])
+              ],
+              child: SectionBackgroundWidget(
+                minWidth: MediaQuery.of(context).size.width,
+              ),
+            ),
+            Row(
+              children: createChapterBackgrounds(sectionBlocs),
+            ),
+          ]),
+          Column(children: [
+            MultiBlocProvider(
+              providers: [
+                BlocProvider(create: (_) => sectionBlocs[0]),
+                BlocProvider(create: (_) => notesBlocs[0])
+              ],
+              child: SectionWidget(
+                bounds: Bounds(bottom: false),
+                minWidth: MediaQuery.of(context).size.width,
+              ),
+            ),
+            Row(children: [
+              ...createChapters(context, sectionBlocs, notesBlocs),
+              Expanded(
+                child: IconButton(
+                  alignment: Alignment.center,
+                  icon: Icon(Icons.add),
+                  onPressed: () {
+                    context
+                        .read<SectionsBloc>()
+                        .add(AddSectionEvent(Section(id: 0, bookId: 0)));
+                  },
+                ),
+              )
+            ]),
+          ]),
+        ]),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Listener(
-      onPointerSignal: (signal) {
-        if (signal is PointerScrollEvent) {
-          scroll(signal.scrollDelta.dy);
-        }
-      },
-      child: ChangeNotifierProvider.value(
-        value: _book,
-        child: Scaffold(
-          body: Stack(
-            children: [
-              Column(children: [
-                ChangeNotifierProvider.value(
-                  value: _book.main,
-                  child: SectionBackgroundWidget(
-                    _book.main,
-                    minWidth: MediaQuery.of(context).size.width,
+    return BlocProvider.value(
+      value: context.watch<BooksBloc>(),
+      child: BlocBuilder<BooksBloc, BooksState>(builder: (context, state) {
+        final books = (state as BooksReadyState).list;
+        final book = books.firstWhere((book) => book.id == widget.bookId);
+        return MultiBlocProvider(
+          providers: [
+            BlocProvider(create: (_) => BookBloc(book)),
+            BlocProvider(create: (_) => SectionsBloc(widget.bookId)),
+          ],
+          child: BlocBuilder<SectionsBloc, SectionsState>(
+              builder: (context, state) {
+            switch (state.runtimeType) {
+              case SectionsLoadingState:
+                return Center(
+                  child: Container(
+                    height: 20.0,
+                    width: 20.0,
+                    child: CircularProgressIndicator(),
                   ),
-                ),
-                Consumer<Book>(builder: (context, book, child) {
-                  return Row(children: [
-                    ...createChapterBackgrounds(),
-                  ]);
-                })
-              ]),
-              Column(
-                children: [
-                  ChangeNotifierProvider.value(
-                    value: _book.main,
-                    child: SectionWidget(
-                      bounds: Bounds(bottom: false),
-                      onMove: (source, note) {
-                        _move(source, note);
-                      },
-                      minWidth: MediaQuery.of(context).size.width,
-                    ),
-                  ),
-                  Consumer<Book>(
-                    builder: (context, book, child) {
-                      return Row(children: [
-                        ...createChapters(),
-                        Expanded(
-                          child: IconButton(
-                            alignment: Alignment.center,
-                            icon: Icon(Icons.add),
-                            onPressed: () {
-                              _book.addChapter();
-                            },
-                          ),
-                        )
-                      ]);
-                    },
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
+                );
+                break;
+              default:
+                final sections = (state as SectionsReadyState).list ?? [];
+                final sectionBlocs =
+                    sections.map((s) => SectionBloc(s)).toList();
+                final notesBlocs =
+                    sections.map((s) => NotesBloc(s.bookId, s.id)).toList();
+                return _ready(context, sectionBlocs, notesBlocs);
+                break;
+            }
+          }),
+        );
+      }),
     );
   }
 }

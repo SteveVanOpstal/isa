@@ -1,37 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:isa/bloc/bookBloc.dart';
+import 'package:isa/bloc/sectionBloc.dart';
+import 'package:isa/models/book.dart';
 import 'package:isa/models/section.dart';
-import 'package:provider/provider.dart';
 
 class SectionBackgroundWidget extends StatelessWidget {
-  final Section section;
   final double minWidth;
 
-  const SectionBackgroundWidget(this.section, {this.minWidth = 0});
-
-  double _width(Section section) {
-    var sectionWidth = section.width * section.scale;
-    return sectionWidth < minWidth ? minWidth : sectionWidth;
-  }
-
-  double _height(Section section) {
-    return section.height * section.scale;
-  }
+  const SectionBackgroundWidget({this.minWidth = 0});
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<Section>(
-      builder: (context, section, child) {
+    return BlocBuilder<BookBloc, Book>(builder: (_, bookState) {
+      return BlocBuilder<SectionBloc, Section>(builder: (context, state) {
+        final offset = bookState.offset;
         return Container(
           margin: EdgeInsets.fromLTRB(5.0, 5.0, 2.5, 2.5),
           child: Ink(
-            color: section.color,
+            color: state.color,
             child: SizedBox(
-              width: _width(section) - 7.5,
-              height: _height(section) - 7.5,
+              width: state.scaledWidth(offset, minWidth) - 7.5,
+              height: state.scaledHeight(offset) - 7.5,
             ),
           ),
         );
-      },
-    );
+      });
+    });
   }
 }

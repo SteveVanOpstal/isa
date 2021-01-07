@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:isa/bloc/noteBloc.dart';
 import 'package:isa/models/note.dart';
 import 'package:isa/widgets/note/noteDialogWidget.dart';
-import 'package:provider/provider.dart';
 
 class NoteWidget extends StatelessWidget {
   final Function(Offset) onPan;
@@ -16,12 +17,12 @@ class NoteWidget extends StatelessWidget {
     hslColor =
         hslColor.withLightness((hslColor.lightness + 0.1).clamp(0.0, 1.0));
 
-    return Consumer<Note>(builder: (context, note, child) {
+    return BlocBuilder<NoteBloc, Note>(builder: (context, state) {
       return Positioned(
-        left: note.left,
-        top: note.top,
-        width: note.width,
-        height: note.height,
+        left: state.left,
+        top: state.top,
+        width: state.width,
+        height: state.height,
         child: Card(
           clipBehavior: Clip.antiAlias,
           color: hslColor.toColor(),
@@ -43,12 +44,14 @@ class NoteWidget extends StatelessWidget {
               ),
               Expanded(
                 child: ListTile(
-                  title: note.title.length > 0 ? Text(note.title) : null,
-                  subtitle: Text(note.note),
+                  title: state.title.isEmpty ? null : Text(state.title),
+                  subtitle: Text(state.note),
                   onTap: () {
                     showDialog(
                       context: context,
-                      child: NoteDialogWidget(note: note),
+                      builder: (context) {
+                        return NoteDialogWidget(note: state);
+                      },
                     );
                   },
                 ),

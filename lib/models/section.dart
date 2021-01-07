@@ -1,63 +1,68 @@
-import 'dart:collection';
-
+import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:isa/models/note.dart';
-import 'package:random_color/random_color.dart';
 
 class Section extends ChangeNotifier {
   int id;
-  double width;
-  double height;
-  double scale = 1;
-  String title = '';
+  final int bookId;
+  final double width;
+  final double height;
+  final String title;
   Color color;
 
   Section(
-    this.id, {
-    this.width,
-    this.height,
-    this.scale = 1,
-    this.title,
-    this.color,
-  }) {
-    RandomColor _randomColor = RandomColor();
-    this.color = _randomColor.randomColor(
-        colorSaturation: ColorSaturation.lowSaturation,
-        colorBrightness: ColorBrightness.light);
-  }
+      {this.id,
+      this.bookId,
+      this.width = 600,
+      this.height = 600,
+      this.title = '',
+      this.color = Colors.blue});
 
-  final List<Note> _notes = [];
+  Section.clone(Section original)
+      : this(
+            id: original.id,
+            bookId: original.bookId,
+            width: original.width,
+            height: original.height,
+            title: original.title,
+            color: original.color);
 
-  UnmodifiableListView<Note> get notes => UnmodifiableListView(_notes);
+  double getScale(double offset) {
+    var d = offset / 1000;
 
-  void addNote({Note note}) {
-    if (note is Note) {
-      _notes.add(note);
+    if (id < 0) {
+      return 1 - d;
     } else {
-      var newNote = Note();
-      addCenter(newNote);
+      return (d / 1.5) + 0.3;
     }
-    notifyListeners();
   }
 
-  void addCenter(Note note) {
-    note.top = this.height / 2 - note.height / 2;
-    note.left = this.width / 2 - note.width / 2;
-    _notes.add(note);
+  double scaledWidth(double offset, double minWidth) {
+    var sectionWidth = width * getScale(offset);
+    return sectionWidth < minWidth ? minWidth : sectionWidth;
   }
 
-  void remove(Note note) {
-    _notes.remove(note);
-    notifyListeners();
+  double scaledHeight(double offset) {
+    return height * getScale(offset);
   }
 
-  void setScale(double scale) {
-    this.scale = scale;
-    notifyListeners();
+  Map<String, dynamic> toMap() {
+    return {
+      "id": id,
+      "bookId": bookId,
+      "width": width,
+      "height": height,
+      "title": title,
+      "color": color.value
+    };
   }
 
-  void setColor(Color color) {
-    this.color = color;
-    notifyListeners();
+  static Section fromMap(Map<String, dynamic> map) {
+    return Section(
+        id: map["id"],
+        bookId: map["bookId"],
+        width: map["width"],
+        height: map["height"],
+        title: map["title"],
+        color: Color(map["color"]));
   }
 }

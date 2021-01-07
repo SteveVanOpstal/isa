@@ -1,10 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:isa/bloc/notesBloc.dart';
+import 'package:isa/bloc/sectionBloc.dart';
+import 'package:isa/models/section.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import 'package:isa/models/section.dart';
 import 'package:isa/widgets/color/colorsDialogWidget.dart';
-import 'package:isa/widgets/color/colorLensMenuButton.dart';
 import 'package:rive/rive.dart';
 
 class LinearHoldAnimationInstance extends LinearAnimationInstance {
@@ -312,7 +314,7 @@ class _SectionHeadingWidgetState extends State<SectionHeadingWidget> {
                         icon: Icon(Icons.add),
                         onPressed: () {
                           setState(() {
-                            widget.section.addNote();
+                            context.read<NotesBloc>().add(AddNewNoteEvent());
                           });
                         },
                       ),
@@ -333,7 +335,9 @@ class _SectionHeadingWidgetState extends State<SectionHeadingWidget> {
                               activeColor: widget.section.color,
                               onPressed: (color) {
                                 setState(() {
-                                  widget.section.setColor(color);
+                                  context
+                                      .read<SectionBloc>()
+                                      .add(UpdateSectionColorEvent(color));
                                 });
                               },
                             ),

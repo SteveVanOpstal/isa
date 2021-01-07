@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:isa/bloc/noteBloc.dart';
+import 'package:isa/bloc/notesBloc.dart';
 import 'package:isa/models/note.dart';
 import 'package:isa/models/section.dart';
 import 'package:isa/widgets/note/noteWidget.dart';
 
 import 'dart:math' as math;
-
-import 'package:provider/provider.dart';
 
 class Bounds {
   bool top = true;
@@ -37,17 +38,20 @@ class _NotesWidgetState extends State<NotesWidget>
     with SingleTickerProviderStateMixin {
   AnimationController controller;
 
+  // BuildContext _context;
+  List<Note> _notes;
+
   @override
   void initState() {
     controller =
         AnimationController(vsync: this, duration: Duration(seconds: 2));
 
-    controller.addListener(() => {
-          setState(() {
-            _checkNotesOutOfBounds();
-            _animate(widget.section);
-          })
-        });
+    controller.addListener(() {
+      // setState(() {
+      _checkNotesOutOfBounds();
+      _animate(widget.section);
+      // })
+    });
     super.initState();
   }
 
@@ -74,30 +78,30 @@ class _NotesWidgetState extends State<NotesWidget>
     if (!_noteForce(section) && !_sectionsForce(section)) {
       controller.stop();
     } else {
-      for (var note in section.notes) {
+      for (var note in _notes) {
         note.setLocation(note.left, note.top);
       }
     }
   }
 
   bool _noteForce(Section section) {
-    if (section.notes.isEmpty) {
+    if (_notes.isEmpty) {
       return false;
     }
 
-    var radius = section.notes[0].width;
+    var radius = _notes[0].width;
     var changes = false;
     var random = math.Random();
 
-    for (var i = 0; i < section.notes.length; i++) {
-      var note = section.notes[i];
+    for (var i = 0; i < _notes.length; i++) {
+      var note = _notes[i];
 
-      for (var j = 0; j < section.notes.length; j++) {
+      for (var j = 0; j < _notes.length; j++) {
         if (i == j) {
           continue;
         }
 
-        var vector = (note.center - section.notes[j].center);
+        var vector = (note.center - _notes[j].center);
         var distance = vector.distance;
         var direction = vector.direction;
 
@@ -118,8 +122,7 @@ class _NotesWidgetState extends State<NotesWidget>
   bool _sectionsForce(Section section) {
     var changes = [];
 
-    for (var i = 0; i < section.notes.length; i++) {
-      var note = section.notes[i];
+    for (var note in _notes) {
       changes.add(_sectionForce(note, section));
     }
 
@@ -207,46 +210,60 @@ class _NotesWidgetState extends State<NotesWidget>
   }
 
   void _checkNotesOutOfBounds() {
-    for (var note in widget.section.notes) {
+    for (var note in _notes) {
       if (_outOfBounds(widget.section, note)) {
         widget.onMove(note);
       }
     }
   }
 
-  createNoteWidgets(Section section) {
-    List<Widget> notes = [];
-    for (var note in section.notes) {
-      notes.add(
-        ChangeNotifierProvider.value(
-          value: note,
-          child: NoteWidget(
-              color: section.color,
-              onPan: (offset) {
-                setState(() {
-                  _pan(section, note, offset);
-                });
-              },
-              onPanEnd: () {
-                _checkNotesOutOfBounds();
-                controller.reset();
-                controller.forward();
-              }),
-        ),
-      );
+  createNoteWidgets(BuildContext context, Section section, List<Note> notes) {
+    List<Widget> list = [];
+    for (var note in notes) {
+      // ignore: close_sinks
+      final noteBloc = NoteBloc(note);
+      list.add(BlocProvider(
+        create: (_) => noteBloc,
+        child: NoteWidget(
+            color: section.color,
+            onPan: (offset) {
+              _pan(section, note, offset);
+              noteBloc.add(UpdateNoteEvent(note));
+            },
+            onPanEnd: () {
+              _checkNotesOutOfBounds();
+              noteBloc.add(UpdateNoteEvent(note));
+              controller.reset();
+              controller.forward();
+            }),
+      ));
     }
-    return notes;
+    return list;
   }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<Section>(
-      builder: (context, section, child) {
-        return Stack(
-          clipBehavior: Clip.none,
-          children: createNoteWidgets(section),
-        );
-      },
-    );
+    return BlocBuilder<NotesBloc, NotesState>(builder: (context, state) {
+      switch (state.runtimeType) {
+        case NotesLoadingState:
+          return Center(
+            child: Container(
+              height: 20.0,
+              width: 20.0,
+              child: CircularProgressIndicator(),
+            ),
+          );
+          break;
+        default:
+          // final section = context.read<SectionBloc>().state;
+          final notes = (state as NotesReadyState).notes ?? [];
+          _notes = notes;
+          return Stack(
+            clipBehavior: Clip.none,
+            children: createNoteWidgets(context, widget.section, notes),
+          );
+          break;
+      }
+    });
   }
 }
