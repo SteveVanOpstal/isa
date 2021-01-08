@@ -4,7 +4,6 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:isa/models/section.dart';
 import 'package:isa/widgets/color/colorsDialogWidget.dart';
-import 'package:isa/widgets/color/colorLensMenuButton.dart';
 import 'package:rive/rive.dart';
 
 class LinearHoldAnimationInstance extends LinearAnimationInstance {
@@ -247,16 +246,9 @@ class _SectionHeadingWidgetState extends State<SectionHeadingWidget> {
       _controller = LinearHoldAnimationController('curl');
       setState(() {
         _artboard.addController(_controller);
-        var background = _artboard.drawables
-            .firstWhere((drawable) => drawable.name == 'background') as Shape;
-        for (var fill in background.fills) {
-          fill.paint.color = widget.section.color;
-        }
-        if (_artboard is Artboard) {
-          for (var drawable in _artboard.drawables) {
-            for (var stroke in (drawable as Shape).strokes) {
-              stroke.paint.color = Theme.of(context).scaffoldBackgroundColor;
-            }
+        for (var drawable in _artboard.drawables) {
+          for (var stroke in (drawable as Shape).strokes) {
+            stroke.paint.color = Theme.of(context).scaffoldBackgroundColor;
           }
         }
       });
@@ -277,6 +269,14 @@ class _SectionHeadingWidgetState extends State<SectionHeadingWidget> {
             artboard: _artboard,
             animationInstance: _controller.instance,
           );
+
+    if (_artboard is Artboard) {
+      var background = _artboard.drawables
+          .firstWhere((drawable) => drawable.name == 'background') as Shape;
+      for (var fill in background.fills) {
+        fill.paint.color = widget.section.color;
+      }
+    }
 
     return SizedBox(
       width: widget.width,
