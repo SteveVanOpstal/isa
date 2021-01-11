@@ -4,6 +4,7 @@ import 'package:isa/bloc/bookBloc.dart';
 import 'package:isa/bloc/sectionBloc.dart';
 import 'package:isa/models/book.dart';
 import 'package:isa/models/section.dart';
+import 'package:isa/widgets/section/sectionCornerWidget.dart';
 
 class SectionBackgroundWidget extends StatelessWidget {
   final double minWidth;
@@ -15,15 +16,24 @@ class SectionBackgroundWidget extends StatelessWidget {
     return BlocBuilder<BookBloc, Book>(builder: (_, bookState) {
       return BlocBuilder<SectionBloc, Section>(builder: (context, state) {
         final offset = bookState.offset;
-        return Container(
-          margin: EdgeInsets.fromLTRB(5.0, 5.0, 2.5, 2.5),
-          child: Ink(
-            color: state.color,
-            child: SizedBox(
-              width: state.scaledWidth(offset, minWidth) - 7.5,
-              height: state.scaledHeight(offset) - 7.5,
+        return Stack(
+          children: [
+            Container(
+              margin: EdgeInsets.fromLTRB(5.0, 5.0, 2.5, 2.5),
+              child: Ink(
+                color: state.color,
+                child: SizedBox(
+                  width: state.scaledWidth(offset, minWidth) - 7.5,
+                  height: state.scaledHeight(offset) - 7.5,
+                ),
+              ),
             ),
-          ),
+            SectionCornerWidget(
+              section: state,
+              width: state.scaledWidth(offset, minWidth),
+              height: state.scaledHeight(offset),
+            ),
+          ],
         );
       });
     });

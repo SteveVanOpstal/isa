@@ -152,8 +152,6 @@ class CustomRiveRenderObject extends RiveRenderObject {
       offset + Offset(170, -30)
     ], true);
     _path.close();
-
-    _offset = offset;
   }
 
   bool hit(Offset position) {
@@ -204,6 +202,7 @@ class CustomRiveRenderObject extends RiveRenderObject {
 
   @override
   void beforeDraw(Canvas canvas, Offset offset) {
+    _offset = offset;
     _updateClipPath(offset);
     canvas.clipPath(_path);
   }
@@ -223,19 +222,19 @@ class CornerButtonsClipper extends CustomClipper<Path> {
   }
 }
 
-class SectionHeadingWidget extends StatefulWidget {
+class SectionCornerWidget extends StatefulWidget {
   final Section section;
   final double width;
   final double height;
 
-  const SectionHeadingWidget(
+  const SectionCornerWidget(
       {@required this.section, @required this.width, @required this.height});
 
   @override
-  _SectionHeadingWidgetState createState() => _SectionHeadingWidgetState();
+  _SectionCornerWidgetState createState() => _SectionCornerWidgetState();
 }
 
-class _SectionHeadingWidgetState extends State<SectionHeadingWidget> {
+class _SectionCornerWidgetState extends State<SectionCornerWidget> {
   Artboard _artboard;
   LinearHoldAnimationController _controller;
   AsyncValueSetter onAnimationChange;

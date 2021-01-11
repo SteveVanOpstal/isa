@@ -8,7 +8,6 @@ import 'package:isa/models/book.dart';
 import 'package:isa/models/note.dart';
 import 'package:isa/models/section.dart';
 import 'package:isa/widgets/notesWidget.dart';
-import 'package:isa/widgets/section/sectionHeadingWidget.dart';
 
 class SectionWidget extends StatefulWidget {
   final Bounds bounds;
@@ -111,36 +110,24 @@ class _SectionWidgetState extends State<SectionWidget> {
     return BlocBuilder<BookBloc, Book>(builder: (_, bookState) {
       return BlocBuilder<SectionBloc, Section>(builder: (context, state) {
         offset = bookState.offset;
-        final width = state.scaledWidth(offset, widget.minWidth);
-        final height = state.scaledHeight(offset);
-        return Stack(
-          clipBehavior: Clip.none,
-          children: [
-            SizedBox(
-              width: width,
-              height: height,
-              child: FittedBox(
-                fit: BoxFit.cover,
-                alignment: Alignment.topLeft,
-                child: SizedBox(
-                  width: state.width,
-                  height: state.height,
-                  child: NotesWidget(
-                    section: state,
-                    bounds: widget.bounds,
-                    onMove: (note) {
-                      _move(context, state, note);
-                    },
-                  ),
-                ),
+        return SizedBox(
+          width: state.scaledWidth(offset, widget.minWidth),
+          height: state.scaledHeight(offset),
+          child: FittedBox(
+            fit: BoxFit.cover,
+            alignment: Alignment.topLeft,
+            child: SizedBox(
+              width: state.width,
+              height: state.height,
+              child: NotesWidget(
+                section: state,
+                bounds: widget.bounds,
+                onMove: (note) {
+                  _move(context, state, note);
+                },
               ),
             ),
-            SectionHeadingWidget(
-              section: state,
-              width: width,
-              height: height,
-            ),
-          ],
+          ),
         );
       });
     });
