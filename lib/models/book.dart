@@ -1,6 +1,9 @@
 const CHAPTER_WIDTH = 800.0;
 const CHAPTER_HEIGHT = 800.0;
 
+const NOTE_WIDTH = 200.0;
+const NOTE_HEIGHT = 200.0;
+
 class Book {
   final int id;
   final String title;

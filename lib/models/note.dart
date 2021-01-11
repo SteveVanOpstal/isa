@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:isa/models/book.dart';
 
 class Note {
   final int id;
@@ -6,8 +7,8 @@ class Note {
   final int sectionId;
   double left = 0;
   double top = 0;
-  double width = 100;
-  double height = 100;
+  double width = NOTE_WIDTH;
+  double height = NOTE_HEIGHT;
   String title = '';
   String note = '';
 
@@ -59,17 +60,25 @@ class Note {
       "id": id,
       "bookId": bookId,
       "sectionId": sectionId,
-      "left": left,
-      "top": top,
-      "width": width,
-      "height": height,
+      "left": left.toInt(),
+      "top": top.toInt(),
+      "width": width.toInt(),
+      "height": height.toInt(),
       "title": title,
       "note": note
     };
   }
 
   static Note fromMap(Map<String, dynamic> map) {
-    return Note(map["id"], map["bookId"], map["sectionId"], map["left"],
-        map["top"], map["width"], map["height"], map["title"], map["note"]);
+    return Note(
+        map["id"],
+        map["bookId"],
+        map["sectionId"],
+        (map["left"] as int).toDouble(),
+        (map["top"] as int).toDouble(),
+        (map["width"] as int).toDouble(),
+        (map["height"] as int).toDouble(),
+        map["title"],
+        map["note"]);
   }
 }

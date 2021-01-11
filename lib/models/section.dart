@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
+import 'book.dart';
+
 class Section extends ChangeNotifier {
   int id;
   final int bookId;
@@ -12,8 +14,8 @@ class Section extends ChangeNotifier {
   Section(
       {this.id,
       this.bookId,
-      this.width = 600,
-      this.height = 600,
+      this.width = CHAPTER_WIDTH,
+      this.height = CHAPTER_HEIGHT,
       this.title = '',
       this.color = Colors.blue});
 
@@ -49,8 +51,8 @@ class Section extends ChangeNotifier {
     return {
       "id": id,
       "bookId": bookId,
-      "width": width,
-      "height": height,
+      "width": width.toInt(),
+      "height": height.toInt(),
       "title": title,
       "color": color.value
     };
@@ -60,8 +62,8 @@ class Section extends ChangeNotifier {
     return Section(
         id: map["id"],
         bookId: map["bookId"],
-        width: map["width"],
-        height: map["height"],
+        width: (map["width"] as int).toDouble(),
+        height: (map["height"] as int).toDouble(),
         title: map["title"],
         color: Color(map["color"]));
   }

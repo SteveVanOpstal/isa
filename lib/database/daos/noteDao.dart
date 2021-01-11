@@ -1,5 +1,6 @@
 import 'package:isa/database/daos/sectionsDao.dart';
 import 'package:isa/database/database.dart';
+import 'package:isa/models/book.dart';
 import 'package:isa/models/note.dart';
 import 'package:sembast/sembast.dart';
 
@@ -21,7 +22,8 @@ class NoteDao {
   }
 
   void addNewNote(int bookId, int sectionId) async {
-    var newNote = Note(0, bookId, sectionId, 0, 0, 100, 100, '', '');
+    var newNote =
+        Note(0, bookId, sectionId, 0, 0, NOTE_WIDTH, NOTE_HEIGHT, '', '');
     return addCenter(newNote);
   }
 
