@@ -1,12 +1,14 @@
+import 'package:flutter/foundation.dart';
 import 'package:isa/models/book.dart';
 import 'package:sembast/sembast.dart';
 import 'package:sembast/sembast_io.dart';
+import 'package:sembast_web/sembast_web.dart';
 
 class IsaDatabase {
   static final IsaDatabase _singleton = IsaDatabase._internal();
 
   String _dbPath = 'isa.db';
-  DatabaseFactory _dbFactory = databaseFactoryIo;
+  DatabaseFactory _dbFactory;
   Database _database;
   Map<String, Database> _books = {};
 
@@ -17,7 +19,13 @@ class IsaDatabase {
     return _singleton;
   }
 
-  IsaDatabase._internal();
+  IsaDatabase._internal() {
+    if (kIsWeb) {
+      _dbFactory = databaseFactoryWeb;
+    } else {
+      _dbFactory = databaseFactoryIo;
+    }
+  }
 
   Future<Database> database() async {
     if (_database == null) {

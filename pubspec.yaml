@@ -26,6 +26,7 @@ dependencies:
   provider: ^4.3.2
   random_color: ^1.0.5
   sembast: ^2.4.8
+  sembast_web: ^1.2.0
   flutter_bloc: ^6.1.1
   rive: ^0.6.5
 
