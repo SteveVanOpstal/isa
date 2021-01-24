@@ -1,7 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:isa/bloc/noteBloc.dart';
 import 'package:isa/bloc/notesBloc.dart';
+import 'package:isa/bloc/sectionBloc.dart';
 import 'package:isa/models/note.dart';
 import 'package:isa/models/section.dart';
 import 'package:isa/widgets/note/noteWidget.dart';
@@ -31,39 +32,29 @@ class NotesWidget extends StatefulWidget {
       : super(key: key);
 
   @override
-  _NotesWidgetState createState() => _NotesWidgetState();
+  NotesWidgetState createState() => NotesWidgetState();
 }
 
-class _NotesWidgetState extends State<NotesWidget>
+class NotesWidgetState extends State<NotesWidget>
     with SingleTickerProviderStateMixin {
-  AnimationController controller;
-
-  // BuildContext _context;
-  List<Note> _notes;
+  AnimationController _controller;
 
   @override
   void initState() {
-    controller =
+    _controller =
         AnimationController(vsync: this, duration: Duration(seconds: 2));
-
-    controller.addListener(() {
-      // setState(() {
-      _checkNotesOutOfBounds();
-      _animate(widget.section);
-      // })
-    });
     super.initState();
   }
 
   void dispose() {
-    controller.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
   @override
   void didUpdateWidget(NotesWidget oldWidget) {
-    controller.reset();
-    controller.forward();
+    _controller.reset();
+    _controller.forward();
     super.didUpdateWidget(oldWidget);
   }
 
@@ -74,39 +65,42 @@ class _NotesWidgetState extends State<NotesWidget>
     _setBoundaries(section, note);
   }
 
-  void _animate(Section section) {
-    if (!_noteForce(section) && !_sectionsForce(section)) {
-      controller.stop();
+  void _animate(BuildContext context, List<Note> notes) {
+    final section = context.read<SectionBloc>().state;
+    if (!_noteForce(section, notes) && !_sectionsForce(section, notes)) {
+      _controller.stop();
     } else {
-      for (var note in _notes) {
+      for (var note in notes) {
         note.setLocation(note.left, note.top);
       }
+      context.read<NotesBloc>().add(UpdateNotesEvent(notes));
     }
   }
 
-  bool _noteForce(Section section) {
-    if (_notes.isEmpty) {
+  bool _noteForce(Section section, notes) {
+    if (notes.isEmpty) {
       return false;
     }
 
-    var radius = _notes[0].width;
+    var radius = notes[0].width;
     var changes = false;
     var random = math.Random();
 
-    for (var i = 0; i < _notes.length; i++) {
-      var note = _notes[i];
+    for (var i = 0; i < notes.length; i++) {
+      var note = notes[i];
 
-      for (var j = 0; j < _notes.length; j++) {
+      for (var j = 0; j < notes.length; j++) {
         if (i == j) {
           continue;
         }
 
-        var vector = (note.center - _notes[j].center);
+        var vector = (note.center - notes[j].center);
         var distance = vector.distance;
         var direction = vector.direction;
 
         if (distance < radius) {
-          double force = ((radius - distance) * 0.05) + random.nextInt(5);
+          double force =
+              ((radius - distance) * 0.005) + (random.nextInt(5) / 100);
           note.left += force * math.cos(direction);
           note.top += force * math.sin(direction);
           changes = true;
@@ -119,10 +113,10 @@ class _NotesWidgetState extends State<NotesWidget>
     return changes;
   }
 
-  bool _sectionsForce(Section section) {
+  bool _sectionsForce(Section section, notes) {
     var changes = [];
 
-    for (var note in _notes) {
+    for (var note in notes) {
       changes.add(_sectionForce(note, section));
     }
 
@@ -209,8 +203,8 @@ class _NotesWidgetState extends State<NotesWidget>
         _outOfBoundsBottom(section, center.dy);
   }
 
-  void _checkNotesOutOfBounds() {
-    for (var note in _notes) {
+  void _checkNotesOutOfBounds(List<Note> notes) {
+    for (var note in notes) {
       if (_outOfBounds(widget.section, note)) {
         widget.onMove(note);
       }
@@ -220,23 +214,30 @@ class _NotesWidgetState extends State<NotesWidget>
   createNoteWidgets(BuildContext context, Section section, List<Note> notes) {
     List<Widget> list = [];
     for (var note in notes) {
-      // ignore: close_sinks
-      final noteBloc = NoteBloc(note);
-      list.add(BlocProvider(
-        create: (_) => noteBloc,
-        child: NoteWidget(
-            color: section.color,
-            onPan: (offset) {
-              _pan(section, note, offset);
-              noteBloc.add(UpdateNoteEvent(note));
-            },
-            onPanEnd: () {
-              _checkNotesOutOfBounds();
-              noteBloc.add(UpdateNoteEvent(note));
-              controller.reset();
-              controller.forward();
+      Listenable animation = Tween().animate(_controller);
+      list.add(
+        AnimatedBuilder(
+            animation: animation,
+            builder: (context, _) {
+              animation.addListener(() {
+                _checkNotesOutOfBounds(notes);
+                _animate(context, notes);
+              });
+              return NoteWidget(
+                  note: note,
+                  color: section.color,
+                  onPan: (offset) {
+                    _pan(section, note, offset);
+                    context.read<NotesBloc>().add(UpdateNoteEvent(note));
+                  },
+                  onPanEnd: () {
+                    _checkNotesOutOfBounds(notes);
+                    context.read<NotesBloc>().add(UpdateDbNoteEvent(note));
+                    _controller.reset();
+                    _controller.forward();
+                  });
             }),
-      ));
+      );
     }
     return list;
   }
@@ -255,9 +256,7 @@ class _NotesWidgetState extends State<NotesWidget>
           );
           break;
         default:
-          // final section = context.read<SectionBloc>().state;
           final notes = (state as NotesReadyState).notes ?? [];
-          _notes = notes;
           return Stack(
             clipBehavior: Clip.none,
             children: createNoteWidgets(context, widget.section, notes),

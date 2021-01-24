@@ -11,6 +11,7 @@ import 'package:isa/widgets/section/sectionBackgroundWidget.dart';
 import 'package:isa/widgets/section/sectionWidget.dart';
 import 'package:provider/provider.dart';
 
+import 'models/book.dart';
 import 'models/section.dart';
 
 class BookScreen extends StatefulWidget {
@@ -127,27 +128,29 @@ class _BookScreenState extends State<BookScreen> {
             BlocProvider(create: (_) => BookBloc(book)),
             BlocProvider(create: (_) => SectionsBloc(widget.bookId)),
           ],
-          child: BlocBuilder<SectionsBloc, SectionsState>(
-              builder: (context, state) {
-            switch (state.runtimeType) {
-              case SectionsLoadingState:
-                return Center(
-                  child: Container(
-                    height: 20.0,
-                    width: 20.0,
-                    child: CircularProgressIndicator(),
-                  ),
-                );
-                break;
-              default:
-                final sections = (state as SectionsReadyState).list ?? [];
-                final sectionBlocs =
-                    sections.map((s) => SectionBloc(s)).toList();
-                final notesBlocs =
-                    sections.map((s) => NotesBloc(s.bookId, s.id)).toList();
-                return _ready(context, sectionBlocs, notesBlocs);
-                break;
-            }
+          child: BlocBuilder<BookBloc, Book>(builder: (__, _) {
+            return BlocBuilder<SectionsBloc, SectionsState>(
+                builder: (context, state) {
+              switch (state.runtimeType) {
+                case SectionsLoadingState:
+                  return Center(
+                    child: Container(
+                      height: 20.0,
+                      width: 20.0,
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
+                  break;
+                default:
+                  final sections = (state as SectionsReadyState).list ?? [];
+                  final sectionBlocs =
+                      sections.map((s) => SectionBloc(s)).toList();
+                  final notesBlocs =
+                      sections.map((s) => NotesBloc(s.bookId, s.id)).toList();
+                  return _ready(context, sectionBlocs, notesBlocs);
+                  break;
+              }
+            });
           }),
         );
       }),

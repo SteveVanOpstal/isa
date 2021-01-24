@@ -40,6 +40,24 @@ class CenterNoteEvent extends NotesEvent {
   CenterNoteEvent(this.note);
 }
 
+class UpdateNoteEvent extends NotesEvent {
+  final Note note;
+
+  UpdateNoteEvent(this.note);
+}
+
+class UpdateDbNoteEvent extends NotesEvent {
+  final Note note;
+
+  UpdateDbNoteEvent(this.note);
+}
+
+class UpdateNotesEvent extends NotesEvent {
+  final List<Note> notes;
+
+  UpdateNotesEvent(this.notes);
+}
+
 // Bloc
 class NotesBloc extends Bloc<NotesEvent, NotesState> {
   final int bookId;
@@ -79,6 +97,25 @@ class NotesBloc extends Bloc<NotesEvent, NotesState> {
       case CenterNoteEvent:
         final note = (event as CenterNoteEvent).note;
         dao.centerNote(note);
+        add(GetNotesEvent());
+        break;
+      case UpdateNoteEvent:
+        final note = Note.clone((event as UpdateNoteEvent).note);
+        if (state is NotesReadyState) {
+          final notes = (state as NotesReadyState).notes;
+          final index = notes.indexWhere((n) => n.id == note.id);
+          notes[index] = note;
+          yield NotesReadyState(notes);
+        }
+        break;
+      case UpdateDbNoteEvent:
+        final note = Note.clone((event as UpdateDbNoteEvent).note);
+        await dao.updateNote(note);
+        add(GetNotesEvent());
+        break;
+      case UpdateNotesEvent:
+        final notes = (event as UpdateNotesEvent).notes;
+        await dao.updateNotes(notes);
         add(GetNotesEvent());
         break;
       default:

@@ -22,8 +22,17 @@ class NoteDao {
   }
 
   void addNewNote(int bookId, int sectionId) async {
+    final notes = await getNotes(bookId, sectionId);
+    final noteIds = notes.map((s) => s.id);
+
+    var newId = 0;
+    while (noteIds.contains(newId)) {
+      newId++;
+    }
+
     var newNote =
-        Note(0, bookId, sectionId, 0, 0, NOTE_WIDTH, NOTE_HEIGHT, '', '');
+        Note(newId, bookId, sectionId, 0, 0, NOTE_WIDTH, NOTE_HEIGHT, '', '');
+
     return addCenter(newNote);
   }
 
@@ -40,11 +49,24 @@ class NoteDao {
       bookDb,
       note.toMap(),
       finder: Finder(
-        filter: Filter.and([
-          Filter.equals('sectionId', note.sectionId),
-          Filter.equals('bookId', note.bookId)
-        ]),
+        filter: Filter.equals('id', note.id),
       ),
+    );
+  }
+
+  Future<List<int>> updateNotes(List<Note> notes) async {
+    final bookDb = await _getBookDatabase(notes[0]);
+
+    return Future.wait(
+      notes.map((note) async {
+        return await _noteStore.update(
+          bookDb,
+          note.toMap(),
+          finder: Finder(
+            filter: Filter.equals('id', note.id),
+          ),
+        );
+      }),
     );
   }
 

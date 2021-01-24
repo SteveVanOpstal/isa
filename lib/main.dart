@@ -45,7 +45,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   _buildBooks(BuildContext context, List<Book> books) {
     return books.map(
-      (b) => FlatButton(
+      (b) => TextButton(
         child: Text(b.title),
         onPressed: () {
           Navigator.push(

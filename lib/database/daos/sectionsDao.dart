@@ -27,13 +27,7 @@ class SectionsDao {
 
   Future<int> newSection(int bookId, int sectionId) async {
     final bookDb = await _database.getBookDatabase(bookId);
-    // final sections = await getSections(section.bookId);
-    // final sectionIds = sections.map((s) => s.id);
 
-    // var newId = 0;
-    // while (sectionIds.contains(newId)) {
-    //   newId++;
-    // }
     var color = RandomColor().randomColor(
         colorSaturation: ColorSaturation.lowSaturation,
         colorBrightness: ColorBrightness.light);
