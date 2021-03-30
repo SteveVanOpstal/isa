@@ -72,7 +72,6 @@ class LinearHoldAnimationController
 // ignore: must_be_immutable
 class CustomRive extends LeafRenderObjectWidget {
   final Artboard artboard;
-  final bool useIntrinsicSize;
   final BoxFit fit;
   final Alignment alignment;
   final LinearHoldAnimationInstance animationInstance;
@@ -80,7 +79,6 @@ class CustomRive extends LeafRenderObjectWidget {
 
   CustomRive({
     @required this.artboard,
-    this.useIntrinsicSize = false,
     this.fit = BoxFit.contain,
     this.alignment = Alignment.center,
     this.animationInstance,
@@ -99,8 +97,7 @@ class CustomRive extends LeafRenderObjectWidget {
     this._renderObjectInstance = CustomRiveRenderObject(animationInstance)
       ..artboard = artboard
       ..fit = fit
-      ..alignment = alignment
-      ..useIntrinsicSize = useIntrinsicSize;
+      ..alignment = Alignment.topLeft;
     return _renderObjectInstance;
   }
 
@@ -110,8 +107,7 @@ class CustomRive extends LeafRenderObjectWidget {
     renderObject
       ..artboard = artboard
       ..fit = fit
-      ..alignment = alignment
-      ..useIntrinsicSize = useIntrinsicSize;
+      ..alignment = alignment;
     this._renderObjectInstance = renderObject;
   }
 
@@ -224,9 +220,13 @@ class SectionHeadingWidget extends StatefulWidget {
   final Section section;
   final double width;
   final double height;
+  final Function(Color) onColorChange;
 
   const SectionHeadingWidget(
-      {@required this.section, @required this.width, @required this.height});
+      {@required this.section,
+      @required this.width,
+      @required this.height,
+      this.onColorChange});
 
   @override
   _SectionHeadingWidgetState createState() => _SectionHeadingWidgetState();
@@ -283,11 +283,11 @@ class _SectionHeadingWidgetState extends State<SectionHeadingWidget> {
       height: widget.height,
       child: Stack(
         children: [
-          Container(
-            alignment: Alignment.topCenter,
-            padding: EdgeInsets.all(10.0),
-            child: Text(widget.section.title),
-          ),
+          // Container(
+          //   alignment: Alignment.topCenter,
+          //   padding: EdgeInsets.all(10.0),
+          //   child: Text(widget.section.title),
+          // ),
           Positioned(
             bottom: 0,
             right: 0,
@@ -312,7 +312,7 @@ class _SectionHeadingWidgetState extends State<SectionHeadingWidget> {
                         icon: Icon(Icons.add),
                         onPressed: () {
                           setState(() {
-                            widget.section.addNote();
+                            // widget.section.addNote();
                           });
                         },
                       ),
@@ -332,9 +332,10 @@ class _SectionHeadingWidgetState extends State<SectionHeadingWidget> {
                             builder: (_) => ColorsDialogWidget(
                               activeColor: widget.section.color,
                               onPressed: (color) {
-                                setState(() {
-                                  widget.section.setColor(color);
-                                });
+                                widget.onColorChange(color);
+                                // setState(() {
+                                // widget.section.setColor(color);
+                                // });
                               },
                             ),
                           );

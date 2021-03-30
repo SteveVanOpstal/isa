@@ -1,0 +1,5 @@
+{"version":1,"sembast":1}
+{"key":"book","store":"book","value":{"title":"New book","offset":0.0}}
+{"key":1,"store":"section","value":{"id":-1,"width":800,"height":800,"title":"Chapter 0","color":4288452737}}
+{"key":2,"store":"section","value":{"id":0,"width":800,"height":800,"title":"Chapter 1","color":4287209374}}
+{"key":3,"store":"section","value":{"id":1,"width":800,"height":800,"title":"Chapter 2","color":4290434244}}

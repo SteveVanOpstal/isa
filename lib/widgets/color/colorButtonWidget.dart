@@ -18,11 +18,14 @@ class ColorButtonWidget extends StatelessWidget {
       margin: EdgeInsets.all(5.0),
       width: 40.0,
       height: 40.0,
-      child: RaisedButton(
-        color: _color,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          primary: _color,
+        ),
         onPressed: () {
           onPressed(_color);
         },
+        child: SizedBox(),
       ),
     );
   }

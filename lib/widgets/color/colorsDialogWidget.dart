@@ -32,8 +32,10 @@ class ColorsDialogWidget extends StatelessWidget {
           children: [
             Container(
               margin: EdgeInsets.all(5.0),
-              child: RaisedButton(
-                color: activeColor,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  primary: activeColor,
+                ),
                 onPressed: () {
                   Navigator.pop(context, true);
                 },
